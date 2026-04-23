@@ -1,0 +1,3163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Silicon Empire</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#060a0f;--surface:#0c1118;--card:#101820;--border:#1e3a2f;
+  --green:#00ff88;--green2:#00cc6a;--cyan:#00d4ff;--gold:#ffd700;
+  --red:#ff3366;--orange:#ff8c00;--purple:#9d4edd;--blue:#0099ff;
+  --text:#c8d8e8;--dim:#4a6a7a;--bright:#e8f4ff;
+  --font-mono:'Share Tech Mono',monospace;
+  --font-ui:'Rajdhani',sans-serif;
+  --font-head:'Orbitron',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+  font-family:var(--font-ui);font-size:14px;touch-action:manipulation}
+
+/* SCANLINE OVERLAY */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(
+  0deg,transparent,transparent 2px,rgba(0,0,0,0.03) 2px,rgba(0,0,0,0.03) 4px);
+  pointer-events:none;z-index:9999}
+
+/* SCREENS */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  transition:opacity .4s;z-index:10}
+.screen.off{opacity:0;pointer-events:none}
+
+/* ── INTRO ── */
+#intro{align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#0a1a0d 0%,#060a0f 70%)}
+.intro-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(0,255,136,.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,255,136,.04) 1px,transparent 1px);
+  background-size:40px 40px}
+.intro-glow{position:absolute;width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,255,136,.08) 0%,transparent 70%);
+  top:50%;left:50%;transform:translate(-50%,-50%)}
+.logo-wrap{position:relative;z-index:2;text-align:center;padding:20px}
+.logo-pre{font-family:var(--font-mono);color:var(--green);font-size:11px;
+  letter-spacing:4px;margin-bottom:12px;opacity:.7}
+.logo{font-family:var(--font-head);font-size:clamp(32px,8vw,56px);font-weight:900;
+  color:var(--bright);letter-spacing:3px;line-height:1;
+  text-shadow:0 0 40px rgba(0,255,136,.4)}
+.logo span{color:var(--green)}
+.logo-sub{font-family:var(--font-mono);font-size:12px;color:var(--dim);
+  letter-spacing:6px;margin-top:8px;text-transform:uppercase}
+.boot-text{font-family:var(--font-mono);font-size:12px;color:var(--green);
+  margin-top:30px;min-height:80px;line-height:1.8;opacity:.8;max-width:380px;text-align:left}
+.cursor-blink{animation:blink .7s step-end infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+.start-btn{margin-top:30px;font-family:var(--font-head);font-size:14px;font-weight:700;
+  letter-spacing:3px;padding:14px 40px;background:transparent;
+  border:2px solid var(--green);color:var(--green);cursor:pointer;
+  transition:all .2s;position:relative;overflow:hidden}
+.start-btn::before{content:'';position:absolute;inset:0;background:var(--green);
+  transform:translateX(-100%);transition:transform .3s;z-index:-1}
+.start-btn:hover::before,.start-btn:active::before{transform:translateX(0)}
+.start-btn:hover,.start-btn:active{color:var(--bg)}
+
+/* ── MAIN GAME ── */
+#game{flex-direction:column}
+
+/* TOP BAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:8px 12px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+  position:relative}
+.company-name-top{font-family:var(--font-head);font-size:13px;font-weight:700;
+  color:var(--green);letter-spacing:1px;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chapter-badge{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  background:rgba(0,255,136,.06);border:1px solid var(--border);
+  padding:3px 8px;border-radius:2px;white-space:nowrap}
+.pause-btn{font-size:16px;background:none;border:none;cursor:pointer;
+  color:var(--dim);padding:4px 8px}
+
+/* STATS BAR */
+.statsbar{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:var(--border);border-bottom:2px solid var(--border);flex-shrink:0}
+.stat{background:var(--surface);padding:6px 4px;text-align:center}
+.stat-icon{font-size:14px;display:block}
+.stat-val{font-family:var(--font-mono);font-size:11px;color:var(--bright);
+  display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-lbl{font-size:9px;color:var(--dim);display:block;text-transform:uppercase}
+
+/* NEWS TICKER */
+.ticker-wrap{background:#050d08;border-bottom:1px solid var(--border);
+  overflow:hidden;height:22px;flex-shrink:0;display:flex;align-items:center}
+.ticker-label{font-family:var(--font-mono);font-size:9px;color:var(--green);
+  padding:0 8px;white-space:nowrap;border-right:1px solid var(--border)}
+.ticker{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  white-space:nowrap;animation:scroll-ticker 40s linear infinite;padding-left:100%}
+@keyframes scroll-ticker{0%{transform:translateX(0)}100%{transform:translateX(-100%)}}
+
+/* MAIN CONTENT */
+.game-body{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.game-body::-webkit-scrollbar{width:3px}
+.game-body::-webkit-scrollbar-thumb{background:var(--border)}
+
+/* TABS */
+.tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:var(--border);flex-shrink:0;position:sticky;bottom:0;z-index:20}
+.tab{background:var(--surface);padding:8px 4px;text-align:center;
+  cursor:pointer;transition:background .2s;border:none;color:var(--dim)}
+.tab .tab-icon{font-size:16px;display:block}
+.tab .tab-lbl{font-size:9px;text-transform:uppercase;letter-spacing:.5px}
+.tab.active{background:var(--card);color:var(--green)}
+.tab:active{background:rgba(0,255,136,.1)}
+
+/* PANELS */
+.panel{display:none;padding:12px;animation:fadeIn .2s}
+.panel.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* STORY PANEL */
+.story-card{background:var(--card);border:1px solid var(--border);border-radius:4px;
+  margin-bottom:12px;overflow:hidden}
+.story-header{padding:12px 14px;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px}
+.chapter-num{font-family:var(--font-mono);font-size:10px;color:var(--green);
+  background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);
+  padding:2px 8px;border-radius:2px}
+.story-title{font-family:var(--font-head);font-size:14px;font-weight:700;color:var(--bright)}
+.story-body{padding:14px;font-size:13px;line-height:1.7;color:var(--text)}
+.story-body .highlight{color:var(--green);font-weight:600}
+.story-body .warning{color:var(--red)}
+.story-body .gold{color:var(--gold)}
+
+/* DECISION CARD */
+.decision-card{background:linear-gradient(135deg,#0c1a14,#0c1118);
+  border:1px solid rgba(0,255,136,.2);border-radius:4px;margin-bottom:10px;
+  overflow:hidden;position:relative}
+.decision-card::before{content:'';position:absolute;left:0;top:0;bottom:0;
+  width:3px;background:var(--green)}
+.dec-header{padding:10px 14px 6px;font-family:var(--font-mono);font-size:10px;
+  color:var(--green);letter-spacing:2px;text-transform:uppercase}
+.dec-question{padding:0 14px 10px;font-size:13px;color:var(--bright);line-height:1.5}
+.dec-options{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+.dec-opt{background:var(--card);padding:12px 14px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  transition:background .15s;border:none;width:100%;text-align:left;color:var(--text)}
+.dec-opt:active{background:rgba(0,255,136,.08)}
+.dec-opt-text{font-size:13px;flex:1}
+.dec-opt-cost{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  white-space:nowrap;margin-left:10px}
+.dec-opt-cost.green{color:var(--green)}
+.dec-opt-cost.red{color:var(--red)}
+.dec-opt-cost.gold{color:var(--gold)}
+
+/* RESULT CARD */
+.result-card{background:var(--card);border-radius:4px;margin-bottom:12px;overflow:hidden}
+.result-good{border-left:3px solid var(--green)}
+.result-bad{border-left:3px solid var(--red)}
+.result-neutral{border-left:3px solid var(--cyan)}
+.result-header{padding:10px 14px;display:flex;align-items:center;gap:8px}
+.result-icon{font-size:20px}
+.result-title{font-family:var(--font-head);font-size:13px;font-weight:700}
+.result-body{padding:0 14px 12px;font-size:12px;line-height:1.6;color:var(--dim)}
+.result-effects{padding:8px 14px;border-top:1px solid var(--border);
+  display:flex;flex-wrap:wrap;gap:6px}
+.effect-chip{font-family:var(--font-mono);font-size:10px;padding:3px 8px;
+  border-radius:2px;background:rgba(255,255,255,.04);border:1px solid var(--border)}
+.effect-chip.pos{color:var(--green);border-color:rgba(0,255,136,.3)}
+.effect-chip.neg{color:var(--red);border-color:rgba(255,51,102,.3)}
+
+/* RIVALS PANEL */
+.rival-card{background:var(--card);border:1px solid var(--border);border-radius:4px;
+  margin-bottom:10px;overflow:hidden}
+.rival-header{padding:10px 14px;display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid var(--border)}
+.rival-logo{width:36px;height:36px;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.rival-name{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--bright)}
+.rival-tag{font-size:10px;color:var(--dim);margin-top:2px}
+.rival-threat{font-family:var(--font-mono);font-size:10px;padding:2px 8px;
+  border-radius:10px;margin-left:auto}
+.threat-low{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.threat-med{background:rgba(255,140,0,.1);color:var(--orange);border:1px solid rgba(255,140,0,.3)}
+.threat-high{background:rgba(255,51,102,.1);color:var(--red);border:1px solid rgba(255,51,102,.3)}
+.rival-body{padding:10px 14px}
+.rival-stat-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.rival-stat{flex:1;min-width:60px;background:rgba(0,0,0,.3);
+  border-radius:3px;padding:6px 8px;text-align:center}
+.rival-stat-n{font-family:var(--font-mono);font-size:12px;color:var(--bright)}
+.rival-stat-l{font-size:9px;color:var(--dim);text-transform:uppercase}
+.rival-action{font-size:11px;color:var(--orange);font-style:italic;margin-top:4px}
+
+/* PROGRESS BAR */
+.pbar-wrap{margin:6px 0}
+.pbar-label{display:flex;justify-content:space-between;margin-bottom:3px}
+.pbar-label span{font-size:10px;color:var(--dim)}
+.pbar-label span:last-child{font-family:var(--font-mono);color:var(--bright)}
+.pbar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.pbar-fill{height:100%;border-radius:2px;transition:width .5s}
+.pbar-fill.green{background:linear-gradient(90deg,var(--green2),var(--green))}
+.pbar-fill.blue{background:linear-gradient(90deg,#0066cc,var(--blue))}
+.pbar-fill.gold{background:linear-gradient(90deg,#cc8800,var(--gold))}
+.pbar-fill.red{background:linear-gradient(90deg,#cc0033,var(--red))}
+.pbar-fill.purple{background:linear-gradient(90deg,#6a0dad,var(--purple))}
+
+/* COMPANY PANEL */
+.section-title{font-family:var(--font-head);font-size:11px;font-weight:700;
+  color:var(--dim);letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+.product-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.product-card{background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:10px;cursor:pointer;transition:border-color .2s;position:relative}
+.product-card:active{border-color:var(--green)}
+.product-card.locked{opacity:.5;cursor:not-allowed}
+.product-card.active-product{border-color:rgba(0,255,136,.4);
+  background:linear-gradient(135deg,#0c1a14,#0c1118)}
+.product-icon{font-size:24px;margin-bottom:6px}
+.product-name{font-family:var(--font-ui);font-size:12px;font-weight:600;color:var(--bright)}
+.product-rev{font-family:var(--font-mono);font-size:10px;color:var(--green)}
+.product-badge{position:absolute;top:6px;right:6px;font-size:8px;
+  padding:2px 5px;border-radius:2px}
+.badge-active{background:rgba(0,255,136,.15);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.badge-locked{background:rgba(255,255,255,.05);color:var(--dim);border:1px solid var(--border)}
+.badge-dev{background:rgba(0,148,255,.15);color:var(--blue);border:1px solid rgba(0,148,255,.3)}
+
+/* HIRE PANEL */
+.hire-card{background:var(--card);border:1px solid var(--border);border-radius:4px;
+  margin-bottom:8px;display:flex;align-items:center;gap:10px;padding:10px 12px;
+  cursor:pointer;transition:border-color .2s}
+.hire-card:active{border-color:var(--cyan)}
+.hire-avatar{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex-shrink:0;
+  background:rgba(0,0,0,.4);border:1px solid var(--border)}
+.hire-info{flex:1;min-width:0}
+.hire-name{font-size:13px;font-weight:600;color:var(--bright)}
+.hire-role{font-size:10px;color:var(--dim);margin-top:1px}
+.hire-skills{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.skill-tag{font-size:9px;padding:1px 5px;border-radius:2px;
+  background:rgba(0,148,255,.1);color:var(--blue);border:1px solid rgba(0,148,255,.2)}
+.hire-cost{text-align:right;flex-shrink:0}
+.hire-salary{font-family:var(--font-mono);font-size:11px;color:var(--gold)}
+.hire-btn{font-family:var(--font-ui);font-size:10px;font-weight:600;
+  padding:4px 10px;border:1px solid var(--green);color:var(--green);
+  background:transparent;border-radius:2px;cursor:pointer;margin-top:4px;
+  display:block;transition:all .15s}
+.hire-btn:active{background:var(--green);color:var(--bg)}
+
+/* RESEARCH PANEL */
+.research-tree{display:flex;flex-direction:column;gap:8px}
+.research-card{background:var(--card);border:1px solid var(--border);
+  border-radius:4px;padding:12px;cursor:pointer;transition:all .2s;position:relative}
+.research-card.researched{border-color:rgba(0,255,136,.3);
+  background:linear-gradient(135deg,#0a1a10,#0c1118)}
+.research-card.locked{opacity:.5;cursor:not-allowed}
+.research-card:not(.locked):not(.researched):active{border-color:var(--cyan)}
+.research-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.research-icon{font-size:22px}
+.research-name{font-family:var(--font-head);font-size:13px;font-weight:700;color:var(--bright)}
+.research-tier{font-size:9px;color:var(--dim);margin-top:1px}
+.research-desc{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:8px}
+.research-footer{display:flex;justify-content:space-between;align-items:center}
+.research-cost{font-family:var(--font-mono);font-size:11px}
+.research-status{font-size:10px;padding:3px 8px;border-radius:2px}
+.rs-done{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.rs-avail{background:rgba(0,148,255,.1);color:var(--blue);border:1px solid rgba(0,148,255,.2)}
+.rs-locked{background:rgba(255,255,255,.03);color:var(--dim);border:1px solid var(--border)}
+.rs-building{background:rgba(255,140,0,.1);color:var(--orange);border:1px solid rgba(255,140,0,.3)}
+
+/* EVENT POPUP */
+.event-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;z-index:100;
+  padding:16px;opacity:0;pointer-events:none;transition:opacity .3s}
+.event-overlay.show{opacity:1;pointer-events:all}
+.event-box{background:var(--card);border:1px solid var(--border);
+  border-radius:6px;width:100%;max-width:420px;overflow:hidden;
+  transform:scale(.95);transition:transform .3s}
+.event-overlay.show .event-box{transform:scale(1)}
+.event-box.crisis{border-color:rgba(255,51,102,.4)}
+.event-box.opportunity{border-color:rgba(0,255,136,.4)}
+.event-box.rival{border-color:rgba(255,140,0,.4)}
+.event-top{padding:16px;border-bottom:1px solid var(--border);
+  display:flex;align-items:flex-start;gap:12px}
+.event-emoji{font-size:32px;flex-shrink:0}
+.event-title{font-family:var(--font-head);font-size:15px;font-weight:700;
+  color:var(--bright);margin-bottom:4px}
+.event-type-tag{font-family:var(--font-mono);font-size:9px;letter-spacing:2px;
+  padding:2px 6px;border-radius:2px}
+.tag-crisis{background:rgba(255,51,102,.15);color:var(--red);border:1px solid rgba(255,51,102,.3)}
+.tag-oppo{background:rgba(0,255,136,.1);color:var(--green);border:1px solid rgba(0,255,136,.3)}
+.tag-rival{background:rgba(255,140,0,.1);color:var(--orange);border:1px solid rgba(255,140,0,.3)}
+.tag-neutral{background:rgba(0,148,255,.1);color:var(--blue);border:1px solid rgba(0,148,255,.2)}
+.event-desc{padding:14px 16px;font-size:13px;line-height:1.6;color:var(--text);
+  border-bottom:1px solid var(--border)}
+.event-choices{display:flex;flex-direction:column;gap:1px;background:var(--border)}
+.event-choice{background:var(--card);padding:12px 16px;cursor:pointer;
+  display:flex;justify-content:space-between;align-items:center;
+  border:none;width:100%;text-align:left;transition:background .15s}
+.event-choice:active{background:rgba(0,255,136,.07)}
+.choice-text{font-size:13px;color:var(--text)}
+.choice-hint{font-family:var(--font-mono);font-size:10px;color:var(--dim);margin-left:8px}
+
+/* TOAST */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%) translateY(-20px);
+  background:var(--card);border:1px solid var(--border);border-radius:4px;
+  padding:8px 16px;font-family:var(--font-mono);font-size:12px;
+  z-index:200;opacity:0;transition:all .3s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.good{border-color:rgba(0,255,136,.4);color:var(--green)}
+.toast.bad{border-color:rgba(255,51,102,.4);color:var(--red)}
+.toast.info{border-color:rgba(0,148,255,.4);color:var(--cyan)}
+
+/* VALUATION BANNER */
+.val-banner{background:linear-gradient(135deg,#0a1a0d,#050d08);
+  border:1px solid rgba(0,255,136,.2);border-radius:4px;padding:14px;
+  margin-bottom:12px;text-align:center}
+.val-amount{font-family:var(--font-head);font-size:clamp(22px,5vw,32px);
+  font-weight:900;color:var(--green);text-shadow:0 0 20px rgba(0,255,136,.3)}
+.val-label{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  letter-spacing:3px;text-transform:uppercase;margin-top:4px}
+.val-rank{font-size:12px;color:var(--gold);margin-top:6px}
+
+/* RANK TABLE */
+.rank-table{width:100%;border-collapse:collapse;margin-bottom:16px}
+.rank-table th{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  padding:8px 6px;border-bottom:1px solid var(--border);text-align:left;letter-spacing:1px}
+.rank-table td{padding:8px 6px;border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:12px}
+.rank-you{background:rgba(0,255,136,.05)!important}
+.rank-you td{color:var(--green)!important}
+.rank-num{font-family:var(--font-mono);color:var(--dim)}
+.rank-val{font-family:var(--font-mono);color:var(--bright)}
+
+/* WIN SCREEN */
+#win{align-items:center;justify-content:center;
+  background:radial-gradient(ellipse at center,#0d1a10 0%,#060a0f 70%)}
+.win-content{text-align:center;padding:20px;max-width:420px;
+  animation:rise .8s cubic-bezier(.34,1.56,.64,1)}
+@keyframes rise{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
+.win-emoji{font-size:64px;margin-bottom:16px;display:block}
+.win-title{font-family:var(--font-head);font-size:28px;font-weight:900;
+  color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,.4);margin-bottom:8px}
+.win-sub{font-size:14px;color:var(--text);margin-bottom:24px;line-height:1.6}
+.win-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px;width:100%}
+.win-stat{background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px}
+.win-stat-n{font-family:var(--font-head);font-size:18px;color:var(--green)}
+.win-stat-l{font-size:10px;color:var(--dim);text-transform:uppercase;margin-top:2px}
+
+/* MISC */
+.divider{height:1px;background:var(--border);margin:12px 0}
+.empty-state{text-align:center;padding:30px 20px;color:var(--dim);font-size:12px}
+.btn-primary{font-family:var(--font-head);font-size:12px;font-weight:700;
+  letter-spacing:1px;padding:10px 20px;background:transparent;
+  border:1px solid var(--green);color:var(--green);cursor:pointer;
+  transition:all .2s;border-radius:2px;width:100%;margin-top:8px}
+.btn-primary:active{background:var(--green);color:var(--bg)}
+.btn-danger{border-color:var(--red);color:var(--red)}
+.btn-danger:active{background:var(--red);color:#fff}
+.btn-gold{border-color:var(--gold);color:var(--gold)}
+.btn-gold:active{background:var(--gold);color:var(--bg)}
+.tag-new{background:var(--red);color:#fff;font-size:9px;padding:1px 4px;
+  border-radius:2px;margin-left:4px;vertical-align:middle}
+.pulse{animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* MARKET CHART */
+.chart-wrap{background:var(--card);border:1px solid var(--border);
+  border-radius:4px;padding:12px;margin-bottom:12px}
+.chart-title{font-family:var(--font-mono);font-size:10px;color:var(--dim);
+  margin-bottom:8px;letter-spacing:2px;text-transform:uppercase}
+canvas.minichart{width:100%;height:60px;display:block}
+
+/* OFFICE UPGRADE */
+.office-card{background:var(--card);border:1px solid var(--border);
+  border-radius:4px;padding:14px;margin-bottom:8px;display:flex;gap:12px;align-items:center}
+.office-icon{font-size:28px;flex-shrink:0}
+.office-info{flex:1}
+.office-name{font-size:13px;font-weight:600;color:var(--bright)}
+.office-desc{font-size:11px;color:var(--dim);margin-top:2px}
+.office-cost{font-family:var(--font-mono);font-size:11px;color:var(--gold);margin-top:4px}
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- INTRO SCREEN -->
+<div class="screen" id="intro">
+  <div class="intro-grid"></div>
+  <div class="intro-glow"></div>
+  <div class="logo-wrap">
+    <div class="logo-pre">// INITIALIZING SIMULATION</div>
+    <div class="logo">SILICON<span>EMPIRE</span></div>
+    <div class="logo-sub">A Tech Founder's Journey</div>
+    <div class="boot-text" id="bootText"></div>
+    <button class="start-btn" id="startBtn" style="display:none" onclick="startGame()">
+      LAUNCH GAME ▶
+    </button>
+  </div>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen off" id="game">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="company-name-top" id="topCompanyName">Loading...</div>
+    <div class="chapter-badge" id="chapterBadge">CH.1</div>
+    <button class="pause-btn" onclick="toggleMenu()">⚙️</button>
+  </div>
+
+  <!-- STATS BAR -->
+  <div class="statsbar">
+    <div class="stat">
+      <span class="stat-icon">💰</span>
+      <span class="stat-val" id="statMoney">$0</span>
+      <span class="stat-lbl">Cash</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">👥</span>
+      <span class="stat-val" id="statTeam">1</span>
+      <span class="stat-lbl">Team</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">⭐</span>
+      <span class="stat-val" id="statRep">0</span>
+      <span class="stat-lbl">Rep</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">🔬</span>
+      <span class="stat-val" id="statTech">0</span>
+      <span class="stat-lbl">Tech</span>
+    </div>
+    <div class="stat">
+      <span class="stat-icon">📈</span>
+      <span class="stat-val" id="statVal">$0</span>
+      <span class="stat-lbl">Value</span>
+    </div>
+  </div>
+
+  <!-- NEWS TICKER -->
+  <div class="ticker-wrap">
+    <div class="ticker-label">LIVE</div>
+    <div class="ticker" id="ticker">Loading market data...</div>
+  </div>
+
+  <!-- BODY -->
+  <div class="game-body" id="gameBody">
+    <!-- STORY PANEL -->
+    <div class="panel active" id="panelStory">
+      <div id="storyContent"></div>
+    </div>
+    <!-- COMPANY PANEL -->
+    <div class="panel" id="panelCompany">
+      <div id="companyContent"></div>
+    </div>
+    <!-- RIVALS PANEL -->
+    <div class="panel" id="panelRivals">
+      <div id="rivalsContent"></div>
+    </div>
+    <!-- RESEARCH PANEL -->
+    <div class="panel" id="panelResearch">
+      <div id="researchContent"></div>
+    </div>
+    <!-- MARKET PANEL -->
+    <div class="panel" id="panelMarket">
+      <div id="marketContent"></div>
+    </div>
+    <!-- HUB PANEL: Skills + Inbox + Twitter -->
+    <div class="panel" id="panelHub">
+      <div id="skillTreeContent"></div>
+      <div class="divider"></div>
+      <div id="twitterContent"></div>
+      <div class="divider"></div>
+      <div id="inboxContent"></div>
+    </div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs" style="grid-template-columns:repeat(6,1fr)">
+    <button class="tab active" onclick="switchTab('Story','panelStory',this)">
+      <span class="tab-icon">📖</span>
+      <span class="tab-lbl">Story</span>
+    </button>
+    <button class="tab" onclick="switchTab('Company','panelCompany',this)">
+      <span class="tab-icon">🏢</span>
+      <span class="tab-lbl">Company</span>
+    </button>
+    <button class="tab" onclick="switchTab('Rivals','panelRivals',this)">
+      <span class="tab-icon">⚔️</span>
+      <span class="tab-lbl">Rivals</span>
+    </button>
+    <button class="tab" onclick="switchTab('Research','panelResearch',this)">
+      <span class="tab-icon">🔬</span>
+      <span class="tab-lbl">R&D</span>
+    </button>
+    <button class="tab" onclick="switchTab('Market','panelMarket',this)">
+      <span class="tab-icon">📊</span>
+      <span class="tab-lbl">Market</span>
+    </button>
+    <button class="tab" onclick="switchTab('Hub','panelHub',this)" style="position:relative">
+      <span class="tab-icon">⚡</span>
+      <span class="tab-lbl">Hub</span>
+      <span id="emailBadge" style="position:absolute;top:4px;right:4px;background:var(--red);color:#fff;font-size:8px;padding:1px 4px;border-radius:8px;display:none"></span>
+    </button>
+  </div>
+</div>
+
+<!-- WIN SCREEN -->
+<div class="screen off" id="win">
+  <div class="win-content">
+    <span class="win-emoji">👑</span>
+    <div class="win-title">EMPIRE ACHIEVED</div>
+    <div class="win-sub" id="winSub">You built the world's most valuable AI company from a bedroom with just a laptop and a dream.</div>
+    <div class="win-stats" id="winStats"></div>
+    <button class="btn-primary btn-gold" onclick="restartGame()">▶ PLAY AGAIN</button>
+  </div>
+</div>
+
+<!-- EVENT OVERLAY -->
+<div class="event-overlay" id="eventOverlay">
+  <div class="event-box" id="eventBox">
+    <div class="event-top">
+      <div class="event-emoji" id="evEmoji"></div>
+      <div>
+        <div class="event-title" id="evTitle"></div>
+        <div class="event-type-tag" id="evTag"></div>
+      </div>
+    </div>
+    <div class="event-desc" id="evDesc"></div>
+    <div class="event-choices" id="evChoices"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// GAME ENGINE
+// ═══════════════════════════════════════════════════════════
+
+// ── STATE ──────────────────────────────────────────────────
+let G = {
+  // Identity
+  playerName: 'Alex Chen',
+  companyName: 'NexMind',
+  founded: 2024,
+  // Resources
+  money: 800,
+  monthlyRevenue: 0,
+  monthlyCosts: 0,
+  reputation: 5,
+  techLevel: 1,
+  // Team
+  team: [],
+  maxTeam: 2,
+  // Progress
+  chapter: 1,
+  storyNode: 'ch1_start',
+  week: 1,
+  month: 1,
+  year: 2024,
+  // Products
+  products: [],
+  activeProducts: [],
+  // Research
+  researched: [],
+  researchQueue: null,
+  researchProgress: 0,
+  // Rivals
+  rivals: [],
+  // Market
+  valuation: 0,
+  marketShare: 0,
+  chartData: [],
+  // Flags
+  decisions: {},
+  events: [],
+  pendingEvent: null,
+  gameOver: false,
+  won: false,
+  // Ticker
+  tickerItems: [],
+  // Office
+  officeLevel: 0, // 0=bedroom,1=garage,2=cowork,3=office,4=hq,5=campus
+  // Stats for win screen
+  totalDecisions: 0,
+  crisisWeathered: 0,
+  rivalsAcquired: 0,
+  // New systems
+  morale: 75,
+  pressMentions: 0,
+  achievements: [],
+  boardTrust: 75,
+  intlOffices: [],
+  stockPrice: 10,
+  stockHistory: [10],
+  investorHappiness: 70,
+  lastEventTime: 0,
+  mediaQueue: [],
+  // Founder skills
+  skillPoints: 3,
+  unlockedSkills: [],
+  // Tech debt
+  techDebt: 0,
+  // Email
+  inbox: [],
+  unreadEmails: 0,
+  // Twitter feed
+  twitterFeed: [],
+  seenTweets: [],
+  // Ally system
+  allies: [],
+  // Legacy
+  legacyScore: 0,
+  freeCounters: 0,
+  // Passive effects from skills (computed)
+  skillEffects: {},
+};
+
+// ── BOOT SEQUENCE ──────────────────────────────────────────
+const bootLines = [
+  '> Loading Silicon Empire v2.0...',
+  '> Initializing market simulation...',
+  '> Spawning rival companies...',
+  '> You are Alex Chen, 23 years old.',
+  '> $800 savings. 1 laptop. Big dreams.',
+  '> The year is 2024. The AI revolution is here.',
+  '> Your move.',
+];
+
+let bootIdx = 0;
+function runBoot() {
+  const el = document.getElementById('bootText');
+  if (bootIdx >= bootLines.length) {
+    document.getElementById('startBtn').style.display = 'inline-block';
+    return;
+  }
+  el.innerHTML += bootLines[bootIdx] + '<br>';
+  bootIdx++;
+  setTimeout(runBoot, bootIdx === bootLines.length - 1 ? 400 : 220);
+}
+setTimeout(runBoot, 600);
+
+// ── CHAPTERS ───────────────────────────────────────────────
+const CHAPTERS = [
+  { num:1, name:'The Bedroom Coder',   icon:'🛏️', minVal:0 },
+  { num:2, name:'The Garage Startup',  icon:'🏠', minVal:50000 },
+  { num:3, name:'Seed Round',          icon:'🌱', minVal:500000 },
+  { num:4, name:'Series A',            icon:'🚀', minVal:10000000 },
+  { num:5, name:'The IPO',             icon:'📈', minVal:500000000 },
+  { num:6, name:'AI Dominance',        icon:'👑', minVal:100000000000 },
+];
+
+// ── STORY NODES ────────────────────────────────────────────
+const STORY = {
+  ch1_start: {
+    chapter: 1,
+    title: 'The Bedroom Coder',
+    text: `The year is <span class="highlight">2024</span>. You are 23, self-taught, and you have been coding since you were 14. Your bedroom doubles as your office — three monitors, empty energy drink cans, and a whiteboard covered in ideas.\n\nThe AI boom is everywhere. OpenAI just hit $80B valuation. Google is scared. Everyones racing to build <span class="highlight">the next big thing</span>.\n\nYou have <span class="gold">$800</span> in savings, a GitHub with 200 stars on a random utility library, and one burning idea: an AI coding assistant that is actually good.\n\nYour old classmate Marcus just got a job at BigTech for $200k. Your parents think you should get a "real job." But you know something they do not.`,
+    decisions: ['ch1_d1']
+  },
+  ch1_d1: {
+    type: 'decision',
+    question: 'You need to build your MVP. How do you approach the first month?',
+    options: [
+      { text: '🖥️ Code 18 hours a day, build it yourself', result: 'ch1_r_solo', cost: '-$200 food/living', effect: { money: -200, tech: 3, rep: 0, time: 4 } },
+      { text: '🤝 Reach out to your Discord community for a co-founder', result: 'ch1_r_cofound', cost: 'Equity risk', effect: { money: 0, tech: 2, rep: 3, time: 3 } },
+      { text: '💸 Hire a freelancer to help build faster', result: 'ch1_r_hire', cost: '-$500', effect: { money: -500, tech: 1, rep: 0, time: 2 } },
+    ]
+  },
+  ch1_r_solo: {
+    type: 'result',
+    tone: 'good',
+    icon: '💻',
+    title: 'Grinding in the Dark',
+    text: 'Four weeks of 18-hour days. Red eyes, cold coffee, breakthrough moments at 3am. But you did it — CodeMind v0.1 is alive. It\ rough, but it works. You post it on Hacker News.',
+    effects: ['+3 Tech Level', '-$200 Cash', '+2 Reputation (HN launch)'],
+    effectKeys: { tech: 3, money: -200, rep: 2 },
+    next: 'ch1_hn_launch'
+  },
+  ch1_r_cofound: {
+    type: 'result',
+    tone: 'neutral',
+    icon: '🤝',
+    title: 'The Co-Founder Gamble',
+    text: 'You bring in Priya, a talented ML engineer from your Discord. She\ smart, driven, and takes 30% equity. Together you\ are faster than you\ would be alone.',
+    effects: ['+2 Tech Level', '+3 Reputation', '+1 Team Member', '-30% equity (future impact)'],
+    effectKeys: { tech: 2, rep: 3, teamAdd: { name:'Priya Sharma', role:'ML Engineer', emoji:'👩‍💻', salary:0, skills:['PyTorch','NLP'] } },
+    next: 'ch1_hn_launch'
+  },
+  ch1_r_hire: {
+    type: 'result',
+    tone: 'neutral',
+    icon: '💸',
+    title: 'Burning Cash Early',
+    text: 'The freelancer was decent but kept misunderstanding your vision. You spent more time reviewing code than writing it. But the MVP is done — just slower and more expensive.',
+    effects: ['+1 Tech Level', '-$500 Cash', 'MVP launched'],
+    effectKeys: { tech: 1, money: -500 },
+    next: 'ch1_hn_launch'
+  },
+  ch1_hn_launch: {
+    type: 'result',
+    tone: 'good',
+    icon: '🔥',
+    title: 'Hacker News: #1 Show HN',
+    text: '<span class="highlight">CodeMind hits #1 on Hacker News.</span> 4,000 upvotes. 600 comments. Your server crashes within 2 hours. You scramble to fix it while watching the user count climb.\n\n847 beta signups overnight. A Y Combinator partner follows you on Twitter. A journalist from TechCrunch DMs you.',
+    effects: ['+15 Reputation', '+847 Beta Users', 'YC Partner noticed you', 'TechCrunch interested'],
+    effectKeys: { rep: 15, money: 200 },
+    next: 'ch1_d2'
+  },
+  ch1_d2: {
+    type: 'decision',
+    question: 'TechCrunch wants to do a story. A YC partner invited you to office hours. What\ your priority?',
+    options: [
+      { text: '📰 Do the TechCrunch story now for maximum exposure', result: 'ch1_r_tc', cost: '2 weeks time', effect: { rep: 20, money: 500 } },
+      { text: '🏢 Prioritize YC office hours — could change everything', result: 'ch1_r_yc', cost: 'Miss press window', effect: { rep: 5, money: 0 } },
+      { text: '🚀 Ignore both, focus on improving the product first', result: 'ch1_r_product', cost: '-Publicity', effect: { tech: 4, money: 0 } },
+    ]
+  },
+  ch1_r_tc: {
+    type: 'result', tone: 'good', icon: '📰',
+    title: 'TechCrunch Writes the Story',
+    text: '"Meet the 23-Year-Old Who Wants to Dethrone GitHub Copilot" — the headline goes viral. 12,000 new signups in a week. Two angels reach out about investing.',
+    effects: ['+20 Rep', '+$2,000 in donations/pre-orders', 'Angel investors interested'],
+    effectKeys: { rep: 20, money: 2000 },
+    next: 'ch1_d3'
+  },
+  ch1_r_yc: {
+    type: 'result', tone: 'good', icon: '🏢',
+    title: 'YC Office Hours',
+    text: 'Michael Seibel himself sits across from you. He tears your pitch apart for 40 minutes and rebuilds it. "Your metrics are wrong, your pricing is wrong, but your vision is right." He suggests applying to the next batch.',
+    effects: ['+10 Rep', 'YC Application Unlocked', '+5 Tech insight'],
+    effectKeys: { rep: 10, tech: 2 },
+    next: 'ch1_d3'
+  },
+  ch1_r_product: {
+    type: 'result', tone: 'neutral', icon: '🔧',
+    title: 'The Quiet Builder',
+    text: 'You ship 3 major features while everyone else chases press. Your retention numbers go from 20% to 67%. When you finally do launch v1.0, the product is dramatically better than your competitors.',
+    effects: ['+5 Tech', '+500 Organic Users', 'Better product foundation'],
+    effectKeys: { tech: 5, rep: 8 },
+    next: 'ch1_d3'
+  },
+  ch1_d3: {
+    type: 'decision',
+    question: 'You\ are running low on cash. An angel investor offers $50k for 10% of your company at a $500k valuation. Your current trajectory suggests you\ will run out of money in 6 weeks.',
+    options: [
+      { text: '✅ Take the $50k — survival is the first rule', result: 'ch1_r_angel_yes', cost: '-10% equity', effect: { money: 50000 } },
+      { text: '❌ Decline — you think you\'re worth more, push for better terms', result: 'ch1_r_angel_no', cost: 'Risk ramen runway', effect: { money: 0 } },
+      { text: '🔄 Counter-offer: $50k for 7% at $714k valuation', result: 'ch1_r_angel_counter', cost: 'Negotiation risk', effect: { money: 50000 } },
+    ]
+  },
+  ch1_r_angel_yes: {
+    type: 'result', tone: 'good', icon: '💰',
+    title: 'First Investment: $50,000',
+    text: 'Marcus Chen (no relation) wires $50k within 48 hours. You have 6 months of runway. The pressure releases just enough to let you breathe and build.',
+    effects: ['+$50,000', 'Official company registered', '6 months runway', 'Valuation: $500K'],
+    effectKeys: { money: 50000, valuation: 500000 },
+    next: 'ch2_start'
+  },
+  ch1_r_angel_no: {
+    type: 'result', tone: 'bad', icon: '😤',
+    title: 'You Held Your Ground',
+    text: 'You decline. Three weeks later you\ are living on instant noodles and maxing out a credit card. But then — a tweet about your product goes viral. Two more angels reach out, one offering $80k for 8%.',
+    effects: ['+$80,000 (better terms!)', '-1 month of stress', 'Valuation: $1M'],
+    effectKeys: { money: 80000, valuation: 1000000, rep: 5 },
+    next: 'ch2_start'
+  },
+  ch1_r_angel_counter: {
+    type: 'result', tone: 'good', icon: '🤝',
+    title: 'Negotiation Win',
+    text: 'After 3 days of back-and-forth, Marcus agrees to $50k for 8%. "I respect the hustle," he says. You just learned that everything is negotiable.',
+    effects: ['+$50,000', '-8% equity (was 10%)', 'Negotiation skill +5', 'Valuation: $625K'],
+    effectKeys: { money: 50000, valuation: 625000, rep: 8 },
+    next: 'ch2_start'
+  },
+  ch2_start: {
+    chapter: 2,
+    title: 'The Garage Startup',
+    text: `Six months later. You\ have moved out of your bedroom into your friend Jamie\ garage in Palo Alto. It\ not glamorous — there\ a fridge that hums too loud and Wi-Fi that dies every Thursday — but you have <span class="highlight">real users now</span>.\n\nCodeMind has <span class="gold">4,200 active users</span>. Three people are on the team. You\ are paying yourself $2,000/month (below poverty line in the Bay).\n\nBut something changed last week: <span class="warning">Microsoft quietly acquired a competitor.</span> Big Tech is waking up to what you\ are building.\n\nRival company <span class="highlight">DevFlow</span> just raised $2M Series A. They\ are moving fast and their CEO has been trash-talking you on Twitter.`,
+    decisions: ['ch2_d1']
+  },
+  ch2_d1: {
+    type: 'decision',
+    question: 'DevFlow just launched a feature that copies your core functionality and marketed it aggressively. They have more money than you. What\ your response?',
+    options: [
+      { text: '⚡ Sprint to outship them — 10 new features in 2 weeks', result: 'ch2_r_sprint', cost: '-Energy, risk of bugs', effect: { tech: 5, rep: -3 } },
+      { text: '🎯 Focus on your niche — go deeper not wider', result: 'ch2_r_niche', cost: 'Slower growth', effect: { tech: 8, rep: 5 } },
+      { text: '📣 Go public with a "We were first" campaign', result: 'ch2_r_pr_war', cost: 'PR risk', effect: { rep: 15, money: -500 } },
+      { text: '🤝 Reach out to DevFlow about partnership/acquisition talks', result: 'ch2_r_devflow_talk', cost: 'Distraction risk', effect: { rep: 5, money: 5000 } },
+    ]
+  },
+  ch2_r_sprint: {
+    type: 'result', tone: 'neutral', icon: '⚡',
+    title: 'The Feature War',
+    text: 'Two weeks of absolute chaos. You ship 8 features (2 were half-baked). Three users tweet about bugs. But your power users love the velocity. DevFlow struggles to keep up with your pace.',
+    effects: ['+5 Tech', '-3 Rep (bug complaints)', 'DevFlow loses momentum'],
+    effectKeys: { tech: 5, rep: -3 }, next: 'ch2_d2'
+  },
+  ch2_r_niche: {
+    type: 'result', tone: 'good', icon: '🎯',
+    title: 'Going Deeper',
+    text: 'While DevFlow goes broad, you go deep. You build the best AI code review tool on the planet for Python developers specifically. A viral blog post: "I Cancelled My DevFlow — CodeMind Just Gets Python."',
+    effects: ['+8 Tech', '+5 Rep', 'Python community loyalty', 'Word of mouth engine'],
+    effectKeys: { tech: 8, rep: 5 }, next: 'ch2_d2'
+  },
+  ch2_r_pr_war: {
+    type: 'result', tone: 'good', icon: '📣',
+    title: 'First Mover Claims',
+    text: 'Your thread goes viral: screenshots, timestamps, git commits. The developer community rallies behind you. DevFlow\ CEO responds poorly and loses credibility. You gain 2,000 followers overnight.',
+    effects: ['+15 Rep', 'Community goodwill', 'DevFlow CEO credibility damaged'],
+    effectKeys: { rep: 15, money: 1000 }, next: 'ch2_d2'
+  },
+  ch2_r_devflow_talk: {
+    type: 'result', tone: 'neutral', icon: '🤝',
+    title: 'Behind Closed Doors',
+    text: 'Their CEO Jake responds to your DM. You meet at a Blue Bottle. He\ not as aggressive in person. No deal happens, but you learn their weaknesses — and they learn you\ are serious competition.',
+    effects: ['+5 Rep', 'Intel gained on DevFlow', 'Mutual respect established'],
+    effectKeys: { rep: 5, money: 0 }, next: 'ch2_d2'
+  },
+  ch2_d2: {
+    type: 'decision',
+    question: 'A top engineer from Google — Sarah Kim, ex-Google Brain — DM\ would you on LinkedIn. She\ open to joining but wants market-rate: $180k salary + 2% equity. You\ are at $85k runway.',
+    options: [
+      { text: '✅ Hire her — this is a talent acquisition that changes trajectory', result: 'ch2_r_hire_sarah', cost: '-$180k/yr + 2% equity', effect: { tech: 15, money: -180000 } },
+      { text: '❌ Can\'t afford it — offer $60k + 4% instead', result: 'ch2_r_counter_sarah', cost: 'Risk rejection', effect: { tech: 8 } },
+      { text: '⏳ Tell her to come back in 3 months after next funding', result: 'ch2_r_wait_sarah', cost: 'She might take another offer', effect: { } },
+    ]
+  },
+  ch2_r_hire_sarah: {
+    type: 'result', tone: 'good', icon: '🌟',
+    title: 'Google Brain Joins the Garage',
+    text: 'Sarah Kim quits Google and joins your garage startup. The tech community loses its mind. Your credibility explodes. She ships a transformer model improvement in week one that makes your product 40% better.',
+    effects: ['+Sarah Kim hired', '+15 Tech Level', 'Massive credibility boost', 'Fundraising just got easier'],
+    effectKeys: { tech: 15, rep: 20, teamAdd: { name:'Sarah Kim', role:'Chief AI Officer', emoji:'🧠', salary:180000, skills:['ML','PyTorch','Research'] } },
+    next: 'ch2_d3'
+  },
+  ch2_r_counter_sarah: {
+    type: 'result', tone: 'neutral', icon: '💬',
+    title: 'The Counter-Offer',
+    text: 'She thinks about it for a week. "I\ am taking a pay cut for the mission, not a pay slash." She negotiates to $90k + 3%. You agree. She joins.',
+    effects: ['+Sarah Kim hired (modified terms)', '+8 Tech Level', '+$90k/yr cost'],
+    effectKeys: { tech: 8, rep: 10, teamAdd: { name:'Sarah Kim', role:'Chief AI Officer', emoji:'🧠', salary:90000, skills:['ML','PyTorch'] } },
+    next: 'ch2_d3'
+  },
+  ch2_r_wait_sarah: {
+    type: 'result', tone: 'bad', icon: '⏰',
+    title: 'The One That Got Away',
+    text: 'You wait. Three weeks later, DevFlow makes her an offer. She takes it. Their AI capability jumps significantly. You watch it happen in real-time on LinkedIn.',
+    effects: ['-10 Rep (missed signal)', 'DevFlow got stronger', 'Lesson: never wait on top talent'],
+    effectKeys: { rep: -10 }, rivalBoost: 'devflow',
+    next: 'ch2_d3'
+  },
+  ch2_d3: {
+    type: 'decision',
+    question: 'You\ have been approached by a VC firm: $500K seed round at $5M valuation. But Y Combinator also accepted you into the next batch (3 months, $500K for 7%, $15M post-money valuation).',
+    options: [
+      { text: '🏦 Take the VC seed round — money now, stay in control', result: 'ch2_r_vc_seed', cost: '-10% equity, miss YC network', effect: { money: 500000 } },
+      { text: '🏢 Go through YC — network and brand worth more than valuation', result: 'ch2_r_yc_batch', cost: '-7% equity, 3 months in program', effect: { money: 500000, rep: 50 } },
+      { text: '⚡ Negotiate YC: take the money but defer the batch program', result: 'ch2_r_yc_defer', cost: 'YC might say no', effect: { money: 500000, rep: 25 } },
+    ]
+  },
+  ch2_r_vc_seed: {
+    type: 'result', tone: 'good', icon: '💼',
+    title: 'Seed Funded: $500,000',
+    text: 'Sequoia\ seed fund leads the round. The check clears Friday. You rent a real office on Monday. The team goes from 3 to 7 in two months.',
+    effects: ['+$500,000', 'Valuation: $5M', 'Real office unlocked', 'Hire up to 10 people'],
+    effectKeys: { money: 500000, valuation: 5000000, rep: 25 },
+    next: 'ch3_start'
+  },
+  ch2_r_yc_batch: {
+    type: 'result', tone: 'good', icon: '🏆',
+    title: 'Y Combinator Batch W2024',
+    text: 'Three months in the YC bubble. Intense. Transformative. You meet your future Board members, your biggest customers, and three people who will work for you someday. Demo Day: 50 investors in the room.',
+    effects: ['+$500K', 'Valuation: $15M', '+50 Reputation', 'YC alumni network forever', 'Demo Day: raised $1.2M total'],
+    effectKeys: { money: 1500000, valuation: 15000000, rep: 50 },
+    next: 'ch3_start'
+  },
+  ch2_r_yc_defer: {
+    type: 'result', tone: 'neutral', icon: '🤔',
+    title: 'Hybrid Path',
+    text: 'YC says partial: you get the investment and guidance but skip the in-person program. You miss some of the magic but gain time. Fair deal.',
+    effects: ['+$500K', 'Valuation: $8M', '+25 Reputation', 'Some YC benefits'],
+    effectKeys: { money: 500000, valuation: 8000000, rep: 25 },
+    next: 'ch3_start'
+  },
+  ch3_start: {
+    chapter: 3,
+    title: 'Seed Stage',
+    text: `It\ been 14 months. You have a <span class="highlight">real team</span>, a real office, and real problems.\n\nCodeMind is now <span class="gold">NexMind</span> — you pivoted from "just" a coding tool to a full AI developer productivity suite. <span class="highlight">48,000 users</span>. $180K MRR.\n\nBut the world got competitive fast:\n• <span class="warning">Microsoft shipped Copilot updates</span> that neutralized two of your features\n• <span class="highlight">DevFlow raised $8M</span> and hired 30 engineers\n• A new player, <span class="warning">AetherAI</span>, emerged from stealth with $15M and ex-OpenAI talent\n\nYour Board is pushing for growth at all costs. Your team is pushing for work-life balance. You\ are in the middle.`,
+    decisions: ['ch3_d1']
+  },
+  ch3_d1: {
+    type: 'decision',
+    question: 'Your burn rate is $180K/month. At current growth, you have 8 months of runway. Board says you need to reach $500K MRR to raise Series A. How do you get there?',
+    options: [
+      { text: '💼 Enterprise: pivot to selling to companies, not individuals', result: 'ch3_r_enterprise', cost: 'Long sales cycles', effect: { money: 200000, rep: 10 } },
+      { text: '📱 Consumer: viral growth, freemium, go for 1M users', result: 'ch3_r_consumer', cost: 'Lower revenue per user', effect: { rep: 30, money: 50000 } },
+      { text: '🔑 API Platform: let other developers build on top of NexMind', result: 'ch3_r_api', cost: 'Competitive risk', effect: { tech: 10, money: 150000 } },
+    ]
+  },
+  ch3_r_enterprise: {
+    type: 'result', tone: 'good', icon: '🏢',
+    title: 'Enterprise Sales',
+    text: 'Your first enterprise contract: Goldman Sachs pays $240K/year for NexMind Enterprise. Then Shopify. Then Stripe. Enterprise is slow but the checks are enormous.',
+    effects: ['+$200K ARR', '+10 Rep', 'Enterprise product roadmap', 'Longer retention'],
+    effectKeys: { money: 200000, rep: 10, monthlyRevenue: 20000 },
+    next: 'ch3_d2'
+  },
+  ch3_r_consumer: {
+    type: 'result', tone: 'neutral', icon: '📱',
+    title: 'Viral Consumer Growth',
+    text: 'A TikTok video shows someone using NexMind to build a full app in 20 minutes. 3M views. 80,000 new signups in a week. Conversion to paid is only 4% but the volume makes up for it.',
+    effects: ['+80K Users', '+30 Rep', '+$50K MRR', 'Community is massive'],
+    effectKeys: { rep: 30, money: 50000, monthlyRevenue: 50000 },
+    next: 'ch3_d2'
+  },
+  ch3_r_api: {
+    type: 'result', tone: 'good', icon: '🔧',
+    title: 'NexMind API Platform',
+    text: 'You open the API. 3,000 developers build on it in month one. Two of those apps go viral and credit NexMind. You become infrastructure — much harder to rip out.',
+    effects: ['+10 Tech Level', '+$150K revenue', 'Platform moat building', '3K developer ecosystem'],
+    effectKeys: { tech: 10, money: 150000, rep: 20, monthlyRevenue: 15000 },
+    next: 'ch3_d2'
+  },
+  ch3_d2: {
+    type: 'decision',
+    question: 'AetherAI just shipped a product that\ genuinely better than yours in two key areas. Their former OpenAI CTO is a rockstar. Your lead engineer says "we need 4 months to catch up."',
+    options: [
+      { text: '🔬 Double R&D spend — match them technically', result: 'ch3_r_rd', cost: '-$300K, 4 months', effect: { tech: 15 } },
+      { text: '🎯 Outrun them on distribution, not technology', result: 'ch3_r_dist', cost: 'Tech debt grows', effect: { rep: 25, money: 100000 } },
+      { text: '🤝 Secretly negotiate to acquire AetherAI', result: 'ch3_r_acquire_aether', cost: '$2M minimum', effect: { tech: 20, money: -2000000 } },
+      { text: '📰 Leak their weaknesses to the press', result: 'ch3_r_smear', cost: 'Ethical risk, blowback', effect: { rep: -15 } },
+    ]
+  },
+  ch3_r_rd: {
+    type: 'result', tone: 'good', icon: '🔬',
+    title: 'The Technical Sprint',
+    text: 'Four months of intense R&D. You don\'t just catch up — you leapfrog them on inference speed. Your model runs 3x faster at the same quality. AetherAI\ lead is gone.',
+    effects: ['+15 Tech Level', 'Technical lead reclaimed', 'Team energy is high'],
+    effectKeys: { tech: 15, money: -300000 }, next: 'ch3_d3'
+  },
+  ch3_r_dist: {
+    type: 'result', tone: 'neutral', icon: '📢',
+    title: 'Distribution Wins',
+    text: 'You partner with 3 major IDEs to become their default AI assistant. Millions of developers see NexMind before they even know AetherAI exists. Technology can be improved; distribution is a moat.',
+    effects: ['+25 Rep', '+$100K MRR', 'IDE partnerships locked', 'Distribution moat'],
+    effectKeys: { rep: 25, money: 100000, monthlyRevenue: 100000 }, next: 'ch3_d3'
+  },
+  ch3_r_acquire_aether: {
+    type: 'result', tone: 'good', icon: '🤝',
+    title: 'Acqui-hire: AetherAI',
+    text: 'Three months of quiet negotiations. $2.1M cash + equity deal. The OpenAI CTO joins your team. Their 8 engineers are now yours. AetherAI is gone from the market.',
+    effects: ['+20 Tech Level', '+8 Engineers', 'AetherAI eliminated', '+$2.1M cost'],
+    effectKeys: { tech: 20, money: -2100000, rep: 30 },
+    rivalRemove: 'aether', next: 'ch3_d3'
+  },
+  ch3_r_smear: {
+    type: 'result', tone: 'bad', icon: '💥',
+    title: 'The Smear Backfires',
+    text: 'The journalist traces it back to you. A developer on your team talks. Twitter has a field day. "NexMind CEO plays dirty." You spend a week doing damage control. Investors call.',
+    effects: ['-15 Rep (massive)', 'Crisis mode', 'Team morale down', 'Board angry'],
+    effectKeys: { rep: -15 }, next: 'ch3_d3'
+  },
+  ch3_d3: {
+    type: 'decision',
+    question: 'Three Series A term sheets are on the table: (A) $15M at $60M val from Andreessen, (B) $10M at $80M val from a strategic investor (Microsoft), (C) $20M at $50M val from Tiger Global.',
+    options: [
+      { text: '🅰️ Andreessen $15M @ $60M — pure financial, best network', result: 'ch3_r_a16z', cost: '-25% dilution', effect: { money: 15000000 } },
+      { text: '🅱️ Microsoft $10M @ $80M — strategic, but they might buy you out', result: 'ch3_r_msft', cost: 'Independence risk', effect: { money: 10000000 } },
+      { text: '🅲️ Tiger Global $20M @ $50M — most cash, aggressive growth mandate', result: 'ch3_r_tiger', cost: 'Growth at all costs pressure', effect: { money: 20000000 } },
+    ]
+  },
+  ch3_r_a16z: {
+    type: 'result', tone: 'good', icon: '💎',
+    title: 'Series A: a16z Leads $15M',
+    text: 'Marc Andreessen tweets about NexMind. The entire Valley takes notice. Your board is now one of the most powerful in tech. Recruiting just got 10x easier.',
+    effects: ['+$15M', 'Valuation: $60M', 'a16z board seat', 'Top-tier talent magnet'],
+    effectKeys: { money: 15000000, valuation: 60000000, rep: 40 },
+    next: 'ch4_start'
+  },
+  ch3_r_msft: {
+    type: 'result', tone: 'neutral', icon: '🪟',
+    title: 'Microsoft Strategic Investment',
+    text: 'Microsoft\ $10M came with a distribution deal — integration with VS Code and Azure. But three of your engineers are uncomfortable with the Microsoft relationship. One quits.',
+    effects: ['+$10M', 'Valuation: $80M', 'VS Code + Azure distribution', '-1 engineer (ideological)'],
+    effectKeys: { money: 10000000, valuation: 80000000, rep: 20 },
+    next: 'ch4_start'
+  },
+  ch3_r_tiger: {
+    type: 'result', tone: 'neutral', icon: '🐯',
+    title: 'Tiger Global: $20M',
+    text: 'Most cash, but Tiger wants 3x revenue growth YoY. They\ will push you hard. Two quarters in, you\ are already feeling the pressure. But $20M is $20M.',
+    effects: ['+$20M', 'Valuation: $50M', 'Aggressive growth mandate', 'Board pressure incoming'],
+    effectKeys: { money: 20000000, valuation: 50000000, rep: 15 },
+    next: 'ch4_start'
+  },
+  ch4_start: {
+    chapter: 4,
+    title: 'Series A — The Real Game Begins',
+    text: `You\ are 26 years old. <span class="highlight">NexMind is worth $60M+</span>. You have 45 employees. Real HR. Real lawyers. Real problems.\n\nThe AI landscape shifted again:\n• <span class="warning">GPT-5 launched</span> and commoditized half your features\n• <span class="highlight">Your valuation doubled</span> when you shipped NexMind AI Agents\n• <span class="warning">DevFlow got acquired by Adobe</span> — now they have $500M to compete\n• A new rival, <span class="warning">Synthex</span>, came out of stealth with $50M and ex-DeepMind researchers\n\nThe board wants you profitable. Your engineers want to do research. Your investors want to go to market. You need to decide who NexMind is.`,
+    decisions: ['ch4_d1']
+  },
+  ch4_d1: {
+    type: 'decision',
+    question: 'Your core product pivot question: NexMind should be...',
+    options: [
+      { text: '🤖 An AI Agent platform — autonomous software that builds software', result: 'ch4_r_agents', cost: '18 month moonshot', effect: { tech: 20 } },
+      { text: '🏢 Enterprise AI infrastructure — be the Salesforce of AI', result: 'ch4_r_enterprise2', cost: 'Slower, safer path', effect: { money: 500000 } },
+      { text: '🧬 AGI research lab — publish papers, attract talent, build toward AGI', result: 'ch4_r_research', cost: 'Investors will panic', effect: { tech: 30, rep: 30 } },
+    ]
+  },
+  ch4_r_agents: {
+    type: 'result', tone: 'good', icon: '🤖',
+    title: 'NexMind Agents: The Bet',
+    text: 'You announce NexMind Agents — AI that doesn\'t just suggest code, but writes, tests, deploys, and monitors entire systems autonomously. The demo video gets 40M views.',
+    effects: ['+20 Tech', 'Viral product announcement', 'Every AI company is watching you', 'Stock (pre-IPO) surges'],
+    effectKeys: { tech: 20, rep: 35, valuation: 200000000 },
+    next: 'ch4_d2'
+  },
+  ch4_r_enterprise2: {
+    type: 'result', tone: 'neutral', icon: '🏢',
+    title: 'Enterprise AI Suite',
+    text: 'Boring but lucrative. You close 40 Fortune 500 deals. NexMind is now in Goldman, JP Morgan, Walmart, and Boeing. ARR hits $12M. Board is happy. Engineers are restless.',
+    effects: ['+$500K MRR', 'Board approval', 'Stable growth', 'Some engineer turnover'],
+    effectKeys: { money: 500000, rep: 20, monthlyRevenue: 500000 },
+    next: 'ch4_d2'
+  },
+  ch4_r_research: {
+    type: 'result', tone: 'good', icon: '🧬',
+    title: 'The Research Lab Bet',
+    text: 'You publish a paper: "NexMind-7B: A Reasoning Architecture for Code Generation." It\ better than anything DeepMind published this year. Every top PhD wants to work for you. Three investors threaten to sue.',
+    effects: ['+30 Tech', '+30 Rep', 'Top talent magnet', 'Investors nervous'],
+    effectKeys: { tech: 30, rep: 30, money: -1000000 },
+    next: 'ch4_d2'
+  },
+  ch4_d2: {
+    type: 'decision',
+    question: 'A whistleblower from Synthex leaks that they\ are 6 months from launching a model that outperforms yours on every benchmark. They have $50M to market it. What do you do?',
+    options: [
+      { text: '🏃 Race to launch your next model NOW, even if not perfect', result: 'ch4_r_race', cost: 'Quality risk', effect: { tech: -5, rep: 10 } },
+      { text: '🔒 File patents on your key innovations before they ship', result: 'ch4_r_patents', cost: '$800K legal fees', effect: { money: -800000, rep: 5 } },
+      { text: '🎙️ Make the whistleblower info public — burn their launch', result: 'ch4_r_leak', cost: 'Legal and ethical risk', effect: { rep: -10 } },
+      { text: '🧘 Stay calm, trust your 18-month roadmap', result: 'ch4_r_calm', cost: 'Competitors gain time', effect: { tech: 10, rep: 10 } },
+    ]
+  },
+  ch4_r_race: {
+    type: 'result', tone: 'neutral', icon: '🏃',
+    title: 'Early Launch: NexMind-v3',
+    text: 'You beat Synthex to market by 3 weeks. The model has some issues. Critics find them. But you\ are first and that matters in AI. "First in market" framing holds.',
+    effects: ['+10 Rep (first mover)', '-5 Tech (rushed)', 'Synthex launch dampened'],
+    effectKeys: { tech: -5, rep: 10 }, next: 'ch4_d3'
+  },
+  ch4_r_patents: {
+    type: 'result', tone: 'good', icon: '⚖️',
+    title: 'Patent Wall',
+    text: 'Your lawyers file 23 patents over 3 weeks. When Synthex launches, they run into your IP immediately. Three of their core features need architectural changes. You bought yourself 8 months.',
+    effects: ['+5 Rep', '-$800K', 'IP moat established', 'Synthex delayed 8 months'],
+    effectKeys: { money: -800000, rep: 5 }, rivalSlow: 'synthex',
+    next: 'ch4_d3'
+  },
+  ch4_r_leak: {
+    type: 'result', tone: 'bad', icon: '🔥',
+    title: 'The Leak Explodes',
+    text: 'You leak the info. Synthex traces it back to you through metadata. Lawsuit filed in 48 hours. Four engineers resign citing "company ethics." The press has a field day.',
+    effects: ['-10 Rep', '$2M legal exposure', '-4 Engineers', 'Ethics scrutiny begins'],
+    effectKeys: { rep: -10, money: -2000000 }, next: 'ch4_d3'
+  },
+  ch4_r_calm: {
+    type: 'result', tone: 'good', icon: '🧘',
+    title: 'The Long Game',
+    text: 'You don\'t panic. Synthex launches. It\ good. But your v3 — launched 3 months later — is definitively better. "Playing chess while everyone else played checkers" — The Information.',
+    effects: ['+10 Tech (properly built)', '+10 Rep (quality reputation)', 'Long-term technical lead'],
+    effectKeys: { tech: 10, rep: 10 }, next: 'ch4_d3'
+  },
+  ch4_d3: {
+    type: 'decision',
+    question: 'Series B bankers are calling. Your options: raise $100M at $800M valuation OR push toward IPO now while the AI market is hot.',
+    options: [
+      { text: '💰 Raise $100M Series B — fuel the rocket', result: 'ch4_r_seriesb', cost: '-12% dilution', effect: { money: 100000000 } },
+      { text: '📈 File for IPO — ring the bell', result: 'ch4_r_ipo_early', cost: 'Massive prep required', effect: { money: 500000000 } },
+      { text: '🤫 Stay private, grow organically', result: 'ch4_r_stay_private', cost: 'Slower but in control', effect: { tech: 10, rep: 5 } },
+    ]
+  },
+  ch4_r_seriesb: {
+    type: 'result', tone: 'good', icon: '🚀',
+    title: 'Series B: $100M',
+    text: 'The $100M lands at an $800M valuation. Andreessen, Sequoia, and SoftBank all participated. You\ are officially a unicorn. Your parents\' friends finally understand what you do.',
+    effects: ['+$100M', 'Valuation: $800M', 'UNICORN STATUS 🦄', '150 new hires authorized'],
+    effectKeys: { money: 100000000, valuation: 800000000, rep: 50 },
+    next: 'ch5_start'
+  },
+  ch4_r_ipo_early: {
+    type: 'result', tone: 'neutral', icon: '📈',
+    title: 'IPO: Too Early?',
+    text: 'You file. Bankers value you at $600M. IPO day: shares open at $22, pop to $31. But Q3 earnings miss slightly. Stock drops to $18. You\ are public, rich, and under much more scrutiny.',
+    effects: ['+$500M raised', 'Public company', 'Quarterly earnings pressure begins', 'Valuation volatile'],
+    effectKeys: { money: 500000000, valuation: 600000000, rep: 30 },
+    next: 'ch5_start'
+  },
+  ch4_r_stay_private: {
+    type: 'result', tone: 'neutral', icon: '🔒',
+    title: 'Staying Private',
+    text: 'You turn down the money. Grow at your own pace. Your engineers love the culture. But DevFlow (now Adobe) starts an aggressive campaign to poach your team with public-company equity.',
+    effects: ['+10 Tech', '+5 Rep (culture)', 'Talent retention risk growing'],
+    effectKeys: { tech: 10, rep: 5 },
+    next: 'ch5_start'
+  },
+  ch5_start: {
+    chapter: 5,
+    title: 'The IPO',
+    text: `You\ are 28. NexMind rings the NASDAQ bell on a Tuesday morning. Your parents fly in. You wore your old hoodie — a statement. CNBC called it "the hoodie heard round Wall Street."\n\n<span class="gold">Market cap: $2.4 Billion</span> on Day 1.\n\nBut being public is a different game:\n• Wall Street analysts downgrade you every time you spend on R&D\n• <span class="warning">Synthex went public too</span> at $1.8B — they\ are gunning for your market cap\n• The SEC opens an investigation into your data practices (routine, but still)\n• Your best engineer is being recruited by OpenAI with a $5M offer\n\nThe endgame is near. Build the most valuable AI company on Earth.`,
+    decisions: ['ch5_d1']
+  },
+  ch5_d1: {
+    type: 'decision',
+    question: 'OpenAI just announced their "Operator" product — directly competing with your core offering. Sam Altman specifically name-dropped NexMind in the announcement. How do you respond?',
+    options: [
+      { text: '💪 "Bring it on" — publish a point-by-point technical comparison', result: 'ch5_r_fight', cost: 'David vs Goliath risk', effect: { rep: 20 } },
+      { text: '🤝 Call Sam Altman and explore partnership', result: 'ch5_r_openai_partner', cost: 'They might absorb you', effect: { rep: 15, money: 50000000 } },
+      { text: '🔄 Pivot to a market OpenAI isn\'t targeting', result: 'ch5_r_pivot2', cost: '6 month disruption', effect: { tech: 15 } },
+      { text: '📊 Double down on enterprise — OpenAI is bad at sales', result: 'ch5_r_enterprise3', cost: 'Market cap pressure', effect: { money: 200000000 } },
+    ]
+  },
+  ch5_r_fight: {
+    type: 'result', tone: 'good', icon: '💪',
+    title: 'The David vs Goliath Play',
+    text: 'Your tweet thread dismantling OpenAI Operator technically gets 2M impressions. Developers rally to NexMind. Stock up 15% in a day. Sam Altman replies respectfully. The fight is good for you.',
+    effects: ['+20 Rep', 'Stock +15%', 'Developer community loyalty', 'Media loves the underdog story'],
+    effectKeys: { rep: 20, valuation: 500000000 }, next: 'ch5_d2'
+  },
+  ch5_r_openai_partner: {
+    type: 'result', tone: 'neutral', icon: '🤝',
+    title: 'Partnership with OpenAI',
+    text: 'You fly to SF. Sam is sharp and the meeting is productive. No acquisition — you make that clear. But a technology partnership emerges. NexMind will run on top of OpenAI\ models for enterprise customers.',
+    effects: ['+$50M partnership revenue', '+15 Rep', 'Some see it as selling out', 'Synthex loses major distribution'],
+    effectKeys: { rep: 15, money: 50000000 }, next: 'ch5_d2'
+  },
+  ch5_r_pivot2: {
+    type: 'result', tone: 'neutral', icon: '🔄',
+    title: 'The Strategic Pivot',
+    text: 'You shift focus to AI hardware optimization — making AI run 10x faster on existing chips. OpenAI doesn\'t play here. Within 6 months every AI company wants your technology.',
+    effects: ['+15 Tech', 'New market category', 'OpenAI threat neutralized', 'New revenue stream'],
+    effectKeys: { tech: 15, rep: 20 }, next: 'ch5_d2'
+  },
+  ch5_r_enterprise3: {
+    type: 'result', tone: 'good', icon: '🏢',
+    title: 'Enterprise Fortress',
+    text: 'You close 200 Fortune 500 contracts in 9 months. ARR hits $400M. Wall Street loves it. Stock doubles. OpenAI can\'t sell enterprise — they lack the relationships and compliance infrastructure you\ have built for years.',
+    effects: ['+$200M ARR', 'Stock 2x', 'Unassailable enterprise position', 'OpenAI retreats from enterprise'],
+    effectKeys: { money: 200000000, valuation: 2000000000 }, next: 'ch5_d2'
+  },
+  ch5_d2: {
+    type: 'decision',
+    question: 'Your AI researchers believe they\ have made a breakthrough — a reasoning architecture that is genuinely 10x more efficient than anything public. Estimated 2 years to productize. Do you publish or keep it secret?',
+    options: [
+      { text: '📢 Publish the paper — cement scientific credibility', result: 'ch5_r_publish', cost: 'Competitors will learn from it', effect: { rep: 40, tech: 5 } },
+      { text: '🔒 Keep it secret — competitive moat', result: 'ch5_r_secret', cost: 'Talent might leak', effect: { tech: 20 } },
+      { text: '⚡ Productize immediately, publish later', result: 'ch5_r_product_first', cost: '18 month crunch', effect: { tech: 15, money: 1000000000 } },
+    ]
+  },
+  ch5_r_publish: {
+    type: 'result', tone: 'good', icon: '📢',
+    title: 'The Paper Heard Round the World',
+    text: '"NexMind-Ω: Recursive Reasoning at Scale" becomes the most cited AI paper in a decade. Every major AI lab tweets about it. You\ are recruited to give keynotes everywhere. Stock hits $40B market cap.',
+    effects: ['+40 Rep', 'Scientific credibility peak', 'Talent floods in', 'Market cap surges'],
+    effectKeys: { rep: 40, tech: 5, valuation: 40000000000 }, next: 'ch5_d3'
+  },
+  ch5_r_secret: {
+    type: 'result', tone: 'neutral', icon: '🔒',
+    title: 'The Secret Architecture',
+    text: 'You keep it internal. Two years of quiet domination. Competitors are confused why NexMind keeps outperforming. When you eventually reveal it, the lead is already insurmountable.',
+    effects: ['+20 Tech', 'Unbeatable moat for 2 years', 'Synthex falls behind permanently'],
+    effectKeys: { tech: 20 }, rivalSlow: 'synthex', next: 'ch5_d3'
+  },
+  ch5_r_product_first: {
+    type: 'result', tone: 'good', icon: '⚡',
+    title: 'Product Over Papers',
+    text: '"NexMind Intelligence Suite" ships. Every user immediately understands the leap — it\ not incremental, it\ generational. $1B ARR milestone crossed in the quarter it launches.',
+    effects: ['+15 Tech', '+$1B in ARR', '$1B ARR milestone 🎯', 'Industry-defining product'],
+    effectKeys: { tech: 15, money: 1000000000, valuation: 80000000000 }, next: 'ch5_d3'
+  },
+  ch5_d3: {
+    type: 'decision',
+    question: 'You receive an acquisition offer from Apple: $180 billion. All-cash. Your co-founders want to take it. Your team wants to stay independent. You\ have always said you\ would never sell. But $180B is $180B.',
+    options: [
+      { text: '❌ Decline. You didn\'t come this far to give up the crown.', result: 'ch5_r_decline_apple', cost: 'Walk away from $180B', effect: { rep: 30 } },
+      { text: '✅ Accept — take the money, change the world from inside Apple', result: 'ch5_r_accept_apple', cost: 'Lose independence', effect: { money: 180000000000 } },
+      { text: '🔄 Counter: $250B or nothing', result: 'ch5_r_counter_apple', cost: 'They might walk', effect: { } },
+    ]
+  },
+  ch5_r_decline_apple: {
+    type: 'result', tone: 'good', icon: '👑',
+    title: 'The Decline That Shook the World',
+    text: '"Alex Chen turns down $180B from Apple." Every headline. Every TV show. You post one tweet: "We\ are just getting started." It goes viral in 42 languages. Your employees cry. Your valuation adds $60B in a week.',
+    effects: ['+30 Rep', '+$60B valuation (turned down Apple!)', 'Legend status achieved', 'Path to #1 is clear'],
+    effectKeys: { rep: 30, valuation: 150000000000 }, next: 'ch6_start'
+  },
+  ch5_r_accept_apple: {
+    type: 'result', tone: 'neutral', icon: '🍎',
+    title: 'The Apple Deal',
+    text: 'You sell. NexMind becomes Apple Intelligence. The technology reaches 2 billion devices. Some say you won. Some say you sold out. History will decide.',
+    effects: ['+$180B', 'NexMind lives on inside Apple', 'Mission achieved differently', 'Legendary exit'],
+    effectKeys: { money: 180000000000, won: true }, next: 'ch6_start'
+  },
+  ch5_r_counter_apple: {
+    type: 'result', tone: 'neutral', icon: '🎲',
+    title: 'The Counter: $250B',
+    text: 'Silence for two weeks. Then: Apple agrees to $220B — the largest tech acquisition in history. You negotiate an unusual deal: you remain CEO of NexMind as an independent subsidiary.',
+    effects: ['+$220B', 'Largest tech acquisition ever', 'Remain independent operationally', 'You still run it'],
+    effectKeys: { money: 220000000000, valuation: 220000000000, rep: 20 }, next: 'ch6_start'
+  },
+  ch6_start: {
+    chapter: 6,
+    title: 'AI Dominance',
+    text: `You\ are 31. The board meeting is in a glass tower you own above the San Francisco skyline.\n\nNexMind\ market cap: <span class="gold">$150 Billion+</span>.\n\nYou are the <span class="highlight">#2 most valuable AI company on Earth</span>. One more move and the crown is yours.\n\nYour rivals:\n• <span class="warning">Microsoft/OpenAI partnership:</span> $3T combined\n• <span class="warning">Google DeepMind:</span> $2T\n• <span class="highlight">NexMind:</span> $150B and rising faster than both\n\nYou have one final chapter. One final move. <span class="highlight">Make it count.</span>`,
+    decisions: ['ch6_d1']
+  },
+  ch6_d1: {
+    type: 'decision',
+    question: 'The final gambit. NexMind\ last major bet before you can claim the #1 position. What\ your defining move?',
+    options: [
+      { text: '🧬 Launch NexMind AGI — announce the first general intelligence', result: 'ch6_r_agi', cost: 'The biggest bet in history', effect: { tech: 50 } },
+      { text: '🌍 Deploy AI to solve climate change publicly — redefine the mission', result: 'ch6_r_climate', cost: '$10B investment', effect: { rep: 100, money: -10000000000 } },
+      { text: '🏛️ NexMind becomes open-source — give it to the world', result: 'ch6_r_open', cost: 'Revenue model disruption', effect: { rep: 80, tech: 30 } },
+      { text: '🛸 NexMind Space AI — Musk move, go to the stars', result: 'ch6_r_space', cost: '$50B investment', effect: { rep: 60, tech: 40 } },
+    ]
+  },
+  ch6_r_agi: {
+    type: 'result', tone: 'good', icon: '🧬',
+    title: 'The AGI Announcement',
+    text: 'You call a press conference. No slides. No demos. You sit down and say: "NexMind has achieved general artificial intelligence. We\ have spent three years verifying this. We\ are ready to share it responsibly."\n\nThe world stops.',
+    effects: ['Valuation: $2T+', '#1 AI Company', 'History textbooks will mention this day', 'YOU WIN'],
+    effectKeys: { tech: 50, valuation: 2000000000000, won: true }, next: 'win'
+  },
+  ch6_r_climate: {
+    type: 'result', tone: 'good', icon: '🌍',
+    title: 'AI for Earth',
+    text: 'NexMind Climate launches. In 18 months your models design carbon capture solutions, optimize global energy grids, and predict weather at 1km resolution. You win the Nobel Prize for Technology. The world calls you the most important company in history.',
+    effects: ['Valuation: $1.8T', 'Nobel Prize', '#1 most trusted tech company', 'YOU WIN'],
+    effectKeys: { rep: 100, valuation: 1800000000000, won: true }, next: 'win'
+  },
+  ch6_r_open: {
+    type: 'result', tone: 'good', icon: '🏛️',
+    title: 'Open Source Everything',
+    text: '"Today, NexMind\ models, training data, and architecture are free to the world." A billion developers can now build on your life\ work. Revenue drops 40%. But the ecosystem you\ have created is worth more than all competitors combined.',
+    effects: ['Valuation: $1.5T (ecosystem value)', '#1 by developer love', 'Cementing legacy', 'YOU WIN'],
+    effectKeys: { rep: 80, valuation: 1500000000000, won: true }, next: 'win'
+  },
+  ch6_r_space: {
+    type: 'result', tone: 'good', icon: '🛸',
+    title: 'NexMind Beyond Earth',
+    text: 'NexMind AI runs the first autonomous Mars base. 50 billion connected devices in orbit run NexMind. You\ have made Elon jealous and Google irrelevant simultaneously.',
+    effects: ['Valuation: $3T', '#1 by market cap', 'Most ambitious company in history', 'YOU WIN'],
+    effectKeys: { tech: 40, valuation: 3000000000000, won: true }, next: 'win'
+  },
+};
+
+// ── RIVALS ─────────────────────────────────────────────────
+const RIVAL_TEMPLATES = [
+  { id:'devflow', name:'DevFlow', founder:'Jake Morrison', emoji:'🔷', color:'#0099ff',
+    desc:'Aggressively funded AI dev tools startup. Jake is loud on Twitter.',
+    startChapter:1, baseVal:2000000, threat:'low',
+    actions:['Poaching your engineers','Copying your features','Aggressive marketing campaign','Raising $8M Series A'] },
+  { id:'aether', name:'AetherAI', founder:'Dr. Mia Zhao', emoji:'🟣', color:'#9d4edd',
+    desc:'Ex-OpenAI researchers. Deep pockets, serious technical talent.',
+    startChapter:2, baseVal:15000000, threat:'med',
+    actions:['Publishing competing research paper','Building a model that outperforms yours','Hiring your lead researcher','Closing a $50M round'] },
+  { id:'synthex', name:'Synthex', founder:'Elena Vasquez', emoji:'🔴', color:'#ff3366',
+    desc:'Ex-DeepMind team. Well-resourced, disciplined, and dangerous.',
+    startChapter:3, baseVal:50000000, threat:'high',
+    actions:['Launching competing enterprise product','Filing patents against you','Partnering with Microsoft','Going public at $1.8B'] },
+  { id:'bigtech_ai', name:'OpenAI/MSFT', founder:'The Giants', emoji:'⬛', color:'#444',
+    desc:'The behemoths. Unlimited resources. They\ are watching you closely.',
+    startChapter:4, baseVal:80000000000, threat:'high',
+    actions:['Launching a direct competitor product','Acquiring your distribution partner','Hiring your engineering leadership','Offering to acquire you for $80B'] },
+];
+
+// ── RESEARCH TREE ──────────────────────────────────────────
+const RESEARCH_ITEMS = [
+  { id:'r1', name:'Transformer Optimization', tier:1, icon:'⚡', desc:'Reduce inference costs by 40%. Unlocks faster product iterations.', cost:{ money:5000, time:7 }, effect:{ tech:5, monthlyRevenue:1000 }, requires:[] },
+  { id:'r2', name:'Context Window Expansion', tier:1, icon:'📖', desc:'100K→500K token context. Critical for enterprise code understanding.', cost:{ money:8000, time:10 }, effect:{ tech:8, rep:5 }, requires:['r1'] },
+  { id:'r3', name:'Code Execution Sandbox', tier:2, icon:'🏖️', desc:'AI can run and test code in real-time. Game-changer for users.', cost:{ money:15000, time:14 }, effect:{ tech:10, rep:15, monthlyRevenue:5000 }, requires:['r2'] },
+  { id:'r4', name:'Multimodal Input', tier:2, icon:'👁️', desc:'Accept images, diagrams, screenshots. Engineers can show bugs visually.', cost:{ money:20000, time:21 }, effect:{ tech:12, rep:20 }, requires:['r2'] },
+  { id:'r5', name:'Agent Framework v1', tier:3, icon:'🤖', desc:'AI that takes actions, not just suggestions. The future of development.', cost:{ money:50000, time:30 }, effect:{ tech:20, rep:30, monthlyRevenue:20000 }, requires:['r3','r4'] },
+  { id:'r6', name:'Custom Model Training', tier:3, icon:'🧠', desc:'Let enterprises train NexMind on their own codebases. Massive enterprise unlock.', cost:{ money:80000, time:45 }, effect:{ tech:15, rep:20, monthlyRevenue:50000 }, requires:['r5'] },
+  { id:'r7', name:'NexMind OS Integration', tier:4, icon:'💻', desc:'Deep OS integration. NexMind everywhere, all the time.', cost:{ money:200000, time:60 }, effect:{ tech:25, rep:40, monthlyRevenue:200000 }, requires:['r6'] },
+  { id:'r8', name:'Reasoning Architecture v2', tier:4, icon:'🌀', desc:'10x reasoning improvement. The breakthrough that defines the company.', cost:{ money:500000, time:90 }, effect:{ tech:40, rep:50, valuation:5000000000 }, requires:['r6'] },
+  { id:'r9', name:'NexMind AGI Research', tier:5, icon:'🧬', desc:'The final frontier. Build toward true general intelligence.', cost:{ money:2000000, time:180 }, effect:{ tech:100, rep:100, valuation:50000000000 }, requires:['r8'] },
+];
+
+// ── RANDOM EVENTS ──────────────────────────────────────────
+const RANDOM_EVENTS = [
+  { id:'e_server_crash', type:'crisis', emoji:'💥', title:'Server Meltdown',
+    tag:'CRISIS', tagClass:'tag-crisis',
+    desc:'Your servers crashed during peak hours. 40,000 users got errors. Twitter is exploding with complaints.',
+    choices:[
+      { text:'🚒 All-hands emergency fix — pull everyone from features', hint:'-1 week velocity', effect:{ rep:-5, money:-2000 } },
+      { text:'💰 Spend $15K on emergency cloud capacity', hint:'-$15K', effect:{ money:-15000, rep:2 } },
+    ]},
+  { id:'e_viral_tweet', type:'opportunity', emoji:'🔥', title:'Your Product Goes Viral',
+    tag:'OPPORTUNITY', tagClass:'tag-oppo',
+    desc:'A developer with 2M followers posted a thread: "NexMind is the best thing I\ have touched in 10 years." 40K retweets. Sign-ups up 900%.',
+    choices:[
+      { text:'⚡ Emergency scale-up — keep the servers alive', hint:'-$20K, +big rep', effect:{ money:-20000, rep:25 } },
+      { text:'🎉 Ride it — servers might hold, let\ see', hint:'Risk crash, but free', effect:{ rep:15, money:5000 } },
+    ]},
+  { id:'e_engineer_quits', type:'crisis', emoji:'😢', title:'Lead Engineer Resigns',
+    tag:'CRISIS', tagClass:'tag-crisis',
+    desc:'Your best engineer, the one who built your core inference engine, just gave 2 weeks notice. Google offered them $400K. They\ are the only one who understands the most critical code.',
+    choices:[
+      { text:'💰 Counteroffer: $350K salary + extra equity', hint:'-$200K/yr more', effect:{ money:-200000, tech:0, rep:3 } },
+      { text:'📝 Let them go gracefully, start documentation sprint', hint:'-6 weeks productivity', effect:{ tech:-5, rep:5 } },
+    ]},
+  { id:'e_acquisition_offer', type:'opportunity', emoji:'💎', title:'Acquisition Inquiry',
+    tag:'OPPORTUNITY', tagClass:'tag-oppo',
+    desc:'A strategic acquirer just reached out informally — they\ are thinking about offering $3x your current valuation. Not a formal offer yet.',
+    choices:[
+      { text:'🤫 Engage privately — explore without committing', hint:'Could distract team', effect:{ rep:5, money:0 } },
+      { text:'❌ Decline immediately and publicly', hint:'+rep, market signal', effect:{ rep:15, valuation:500000000 } },
+    ]},
+  { id:'e_recession', type:'crisis', emoji:'📉', title:'Tech Winter Hits',
+    tag:'CRISIS', tagClass:'tag-crisis',
+    desc:'The Fed raised rates. VC funding is down 60%. Three of your competitors just laid off 40% of staff. Investors are calling you asking about your burn rate.',
+    choices:[
+      { text:'✂️ Preemptive 15% layoff — protect runway', hint:'-morale, +runway', effect:{ money:500000, rep:-10, team:-3 } },
+      { text:'💪 No layoffs — bet on the team', hint:'+morale, -runway risk', effect:{ rep:10, money:-100000 } },
+    ]},
+  { id:'e_regulation', type:'neutral', emoji:'⚖️', title:'AI Regulation Bill',
+    tag:'REGULATION', tagClass:'tag-neutral',
+    desc:'Congress is debating the AI Transparency Act. It would require companies to open-source safety mechanisms. Your lawyers say it could affect your IP moat.',
+    choices:[
+      { text:'🏛️ Lobby against it — protect your IP', hint:'-$500K lobbying', effect:{ money:-500000, rep:-5 } },
+      { text:'🤝 Embrace it — lead the compliance narrative', hint:'+rep, some cost', effect:{ rep:20, money:-100000 } },
+    ]},
+  { id:'e_rival_poach', type:'rival', emoji:'⚔️', title:'Rival is Poaching Your Team',
+    tag:'RIVAL ACTION', tagClass:'tag-rival',
+    desc:'Synthex has been directly messaging your engineers on LinkedIn with offers 30% above market rate. Three people told you about it. Two didn\'t.',
+    choices:[
+      { text:'💰 Across-the-board raise + retention bonuses', hint:'-$1M, keeps team', effect:{ money:-1000000, rep:10, team:0 } },
+      { text:'📣 Public statement: "Our culture beats their cash"', hint:'Some believe it, some don\'t', effect:{ rep:5, money:0 } },
+    ]},
+  { id:'e_breakthrough', type:'opportunity', emoji:'💡', title:'Unexpected Research Breakthrough',
+    tag:'BREAKTHROUGH', tagClass:'tag-oppo',
+    desc:'Your research team discovered an optimization that makes your model 2x more efficient overnight. They want to publish. You want to ship. Both take time.',
+    choices:[
+      { text:'⚡ Ship it immediately as a product feature', hint:'+revenue, no cred', effect:{ money:100000, tech:8 } },
+      { text:'📢 Publish the paper AND ship 30 days later', hint:'Best of both worlds, slower', effect:{ tech:10, rep:25, money:50000 } },
+    ]},
+];
+
+// ── PRODUCTS ───────────────────────────────────────────────
+const PRODUCTS_DATA = [
+  { id:'p1', name:'CodeMind Beta', icon:'⌨️', desc:'AI coding assistant', baseRev:500, unlockChapter:1, active:false },
+  { id:'p2', name:'NexMind Pro', icon:'💎', desc:'Professional AI suite', baseRev:5000, unlockChapter:2, active:false },
+  { id:'p3', name:'NexMind Enterprise', icon:'🏢', desc:'Enterprise contracts', baseRev:50000, unlockChapter:3, active:false },
+  { id:'p4', name:'NexMind API', icon:'🔧', desc:'Developer API platform', baseRev:20000, unlockChapter:3, active:false },
+  { id:'p5', name:'NexMind Agents', icon:'🤖', desc:'Autonomous AI agents', baseRev:200000, unlockChapter:4, active:false },
+  { id:'p6', name:'NexMind Intelligence Suite', icon:'🌀', desc:'Next-gen AI platform', baseRev:1000000, unlockChapter:5, active:false },
+];
+
+// ── OFFICE UPGRADES ────────────────────────────────────────
+const OFFICES = [
+  { name:'Bedroom', icon:'🛏️', desc:'Where it all started', cost:0 },
+  { name:'Garage', icon:'🏠', desc:'Silicon Valley tradition', cost:5000, effect:{ maxTeam:5, rep:5 } },
+  { name:'Co-working Space', icon:'☕', desc:'Real desks, free coffee', cost:20000, effect:{ maxTeam:12, rep:10 } },
+  { name:'Startup Office', icon:'🏢', desc:'10 Townsend St, SF', cost:100000, effect:{ maxTeam:30, rep:20 } },
+  { name:'Company HQ', icon:'🏛️', desc:'Your name on the building', cost:1000000, effect:{ maxTeam:200, rep:40 } },
+  { name:'Global Campus', icon:'🌍', desc:'Like Googleplex, but better', cost:10000000, effect:{ maxTeam:5000, rep:80 } },
+];
+
+// ── HIRE POOL ──────────────────────────────────────────────
+const HIRE_POOL = [
+  { name:'Marcus Osei', role:'Frontend Engineer', emoji:'👨‍💻', salary:90000, skills:['React','TypeScript'], minChapter:1 },
+  { name:'Zara Ahmed', role:'Backend Engineer', emoji:'👩‍💻', salary:100000, skills:['Go','AWS'], minChapter:1 },
+  { name:'Wei Liu', role:'ML Engineer', emoji:'👨‍🔬', salary:140000, skills:['PyTorch','CUDA'], minChapter:2 },
+  { name:'Sofia Reyes', role:'Product Manager', emoji:'👩‍💼', salary:120000, skills:['Product','GTM'], minChapter:2 },
+  { name:'Dmitri Volkov', role:'Security Engineer', emoji:'🛡️', salary:130000, skills:['Security','DevOps'], minChapter:2 },
+  { name:'Aisha Johnson', role:'AI Researcher', emoji:'🧠', salary:180000, skills:['Research','NLP'], minChapter:3 },
+  { name:'Raj Patel', role:'Sales Director', emoji:'📊', salary:150000, skills:['Enterprise','Sales'], minChapter:3 },
+  { name:'Emma Wilson', role:'CFO', emoji:'💼', salary:220000, skills:['Finance','IPO'], minChapter:4 },
+  { name:'Carlos Mendez', role:'VP Engineering', emoji:'⚙️', salary:200000, skills:['Leadership','Scale'], minChapter:4 },
+  { name:'Dr. Hannah Park', role:'Chief Scientist', emoji:'🔬', salary:250000, skills:['AGI','Research'], minChapter:5 },
+];
+
+// ── EXTENDED RANDOM EVENTS ────────────────────────────────
+const EXTRA_EVENTS = [
+  { id:'e_hacker', type:'crisis', emoji:'💻', title:'We Got Hacked',
+    tag:'SECURITY BREACH', tagClass:'tag-crisis',
+    desc:'At 2am your CTO calls — NexMind user database was breached. 800K email addresses exposed. The story is already on TechCrunch. Your legal team is panicking.',
+    choices:[
+      { text:'🔒 Full transparency — publish a detailed breach report within 24hrs', hint:'+rep long term, short pain', effect:{ rep:-5, money:-50000 } },
+      { text:'🤫 Minimal disclosure — legal minimum, hope it blows over', hint:'+$$ saved, big rep risk', effect:{ rep:-20, money:-10000 } },
+      { text:'💰 Hire top crisis PR firm immediately', hint:'-$200K, best outcome', effect:{ rep:5, money:-200000 } },
+    ]},
+  { id:'e_senate', type:'crisis', emoji:'🏛️', title:'Senate Hearing: You are Summoned',
+    tag:'GOVERNMENT', tagClass:'tag-neutral',
+    desc:'"The AI Accountability Act" — you have been subpoenaed to testify before the Senate Commerce Committee. Your lawyers say it is political theater but the cameras will be everywhere.',
+    choices:[
+      { text:'📢 Go in strong — advocate for responsible AI publicly', hint:'+rep, industry respect', effect:{ rep:25, money:-30000 } },
+      { text:'🧑‍⚖️ Send your lawyer, avoid the spectacle', hint:'Looks evasive to press', effect:{ rep:-10, money:-50000 } },
+      { text:'🤝 Pre-hearing deal — support watered-down regulation', hint:'Short-term peace', effect:{ rep:5, money:-20000 } },
+    ]},
+  { id:'e_talent_war', type:'rival', emoji:'⚔️', title:'Talent War: Bidding for One Engineer',
+    tag:'RIVAL ACTION', tagClass:'tag-rival',
+    desc:'Dr. James Park — the world leading expert on AI reasoning — just left DeepMind. Every company is bidding. Synthex offered $1.2M/year. The bidding war is public.',
+    choices:[
+      { text:'💰 Bid $1.5M — win at all costs', hint:'-$1.5M/yr, massive tech boost', effect:{ money:-1500000, tech:20, rep:15 } },
+      { text:'🎯 Offer less cash but more equity + mission', hint:'Might work, might not', effect:{ tech:10, rep:5 } },
+      { text:'🚫 Do not bid — it is a trap to drain your cash', hint:'Save money, miss talent', effect:{ money:0 } },
+    ]},
+  { id:'e_economic_crash', type:'crisis', emoji:'📉', title:'Global Recession Hits',
+    tag:'MACRO CRISIS', tagClass:'tag-crisis',
+    desc:'Markets crashed overnight. S&P down 30%. Your investors are calling. Enterprise customers are freezing budgets. Consumer spending on software is collapsing. This is the 2008 of AI.',
+    choices:[
+      { text:'✂️ Emergency austerity — cut 25% of team, extend runway', hint:'-morale, +survival', effect:{ money:500000, rep:-15, team:-5 } },
+      { text:'💪 Hold steady — trust the long game, no cuts', hint:'+morale, risk of collapse', effect:{ rep:10, money:-200000 } },
+      { text:'🔄 Pivot to recession-proof enterprise contracts only', hint:'Slow but stable', effect:{ money:100000, rep:0 } },
+    ]},
+  { id:'e_viral_demo', type:'opportunity', emoji:'🚀', title:'Demo Goes Absolutely Viral',
+    tag:'VIRAL MOMENT', tagClass:'tag-oppo',
+    desc:'An intern posted a 60-second demo of NexMind building a full app autonomously. 12 million views in 6 hours. Every tech CEO is tweeting about it. Your sign-up page is down.',
+    choices:[
+      { text:'⚡ Emergency all-hands — scale everything, ride the wave', hint:'-$50K infra, massive gain', effect:{ money:-50000, rep:40, valuation:500000000 } },
+      { text:'🎯 Gate it — waitlist only, create exclusivity', hint:'Hype compounds, slower growth', effect:{ rep:30, valuation:200000000 } },
+    ]},
+  { id:'e_whistleblower', type:'crisis', emoji:'😤', title:'Internal Whistleblower',
+    tag:'CRISIS', tagClass:'tag-crisis',
+    desc:'A former employee filed an anonymous complaint with the FTC claiming NexMind AI makes "misleading accuracy claims." The story leaked to the New York Times. It is partially true.',
+    choices:[
+      { text:'✅ Acknowledge and fix — update all marketing claims', hint:'+trust long term', effect:{ rep:-5, money:-30000 } },
+      { text:'⚖️ Legal response — deny everything aggressively', hint:'Escalation risk', effect:{ rep:-20, money:-100000 } },
+      { text:'🔍 Internal investigation — show transparency process', hint:'Balanced approach', effect:{ rep:5, money:-50000 } },
+    ]},
+  { id:'e_competitor_scandal', type:'opportunity', emoji:'💥', title:'Rival Caught in Scandal',
+    tag:'OPPORTUNITY', tagClass:'tag-oppo',
+    desc:'Synthex CEO was exposed for faking demo metrics in their last fundraise. The story broke on Twitter. Their top engineers are looking for jobs. Investors are pulling out.',
+    choices:[
+      { text:'🤐 Stay quiet — let it play out, do not kick them while down', hint:'+class rep', effect:{ rep:10 } },
+      { text:'🎯 Poach their best engineers immediately', hint:'+talent, looks opportunistic', effect:{ tech:15, rep:-5 } },
+      { text:'📣 Subtly position NexMind as the trustworthy alternative', hint:'Marketing moment', effect:{ rep:20, money:-20000 } },
+    ]},
+  { id:'e_podcast', type:'opportunity', emoji:'🎙️', title:'Lex Fridman Wants You on His Podcast',
+    tag:'PR OPPORTUNITY', tagClass:'tag-oppo',
+    desc:'4-hour technical deep-dive with Lex. His last AI CEO episode got 8M views. Your comms team says the preparation takes 2 weeks but the exposure is massive.',
+    choices:[
+      { text:'🎙️ Do it — 4 hours of unfiltered vision', hint:'+massive rep, 2 weeks prep', effect:{ rep:35, money:0 } },
+      { text:'⏩ Do it but keep it to 90 minutes', hint:'+rep, less deep', effect:{ rep:20 } },
+      { text:'❌ Too busy — focus on shipping', hint:'Miss PR window', effect:{ tech:5 } },
+    ]},
+  { id:'e_board_revolt', type:'crisis', emoji:'😱', title:'Board Revolt',
+    tag:'GOVERNANCE CRISIS', tagClass:'tag-crisis',
+    desc:'Two board members are circulating a letter to remove you as CEO. They want "more experienced leadership." This is the Sam Altman moment. Your team is 100% behind you.',
+    choices:[
+      { text:'💪 Fight — call emergency all-hands, get team behind you publicly', hint:'High risk, high reward', effect:{ rep:20, money:-50000 } },
+      { text:'🤝 Negotiate — give them a COO in exchange for staying', hint:'Compromise your control', effect:{ rep:5, money:0 } },
+      { text:'⚖️ Lawyer up — threaten to expose their conflicts of interest', hint:'Nuclear option', effect:{ rep:-10, money:-200000 } },
+    ]},
+  { id:'e_ipo_pop', type:'opportunity', emoji:'📈', title:'Analyst Upgrades You',
+    tag:'MARKET MOVE', tagClass:'tag-oppo',
+    desc:'Goldman Sachs just published a 40-page report: "NexMind is the most undervalued AI company in history." Target price 3x current. Every institutional investor is calling.',
+    choices:[
+      { text:'📊 Secondary offering — sell $500M of shares at peak', hint:'+cash, slight dilution', effect:{ money:500000000, rep:10 } },
+      { text:'🚫 No selling — signal conviction to market', hint:'+trust, no cash', effect:{ rep:25, valuation:1000000000 } },
+    ]},
+  { id:'e_twitter_war', type:'rival', emoji:'🐦', title:'Rival CEO Attacks You on Twitter',
+    tag:'RIVAL ACTION', tagClass:'tag-rival',
+    desc:'Jake Morrison (DevFlow CEO) posted a 20-tweet thread claiming NexMind benchmarks are fabricated. It has 50K likes. Your team is furious and wants to respond.',
+    choices:[
+      { text:'🔥 Destroy him technically — publish raw benchmark methodology', hint:'+credibility', effect:{ rep:20, tech:2 } },
+      { text:'😂 Reply with one line and move on', hint:'+class, viral potential', effect:{ rep:15 } },
+      { text:'🤐 Total silence — do not dignify it', hint:'+maturity signal', effect:{ rep:10 } },
+      { text:'💀 Go scorched earth — expose his company real metrics', hint:'Messy but effective', effect:{ rep:-5, rivalSlow:'devflow' } },
+    ]},
+  { id:'e_eu_regulation', type:'crisis', emoji:'🇪🇺', title:'EU AI Act: You are Non-Compliant',
+    tag:'REGULATION', tagClass:'tag-neutral',
+    desc:'The EUs new AI Act classifies NexMind as "high-risk AI." You have 6 months to comply or face a €20M fine and ban from the EU market. Europe is 30% of your revenue.',
+    choices:[
+      { text:'⚡ Emergency compliance team — fix it fast', hint:'-$1M, keep EU market', effect:{ money:-1000000, rep:10 } },
+      { text:'⚖️ Challenge it in court — this law is overreach', hint:'2yr fight, PR battle', effect:{ money:-500000, rep:-5 } },
+      { text:'🤝 Work with EU to shape the regulation itself', hint:'Slow but become the standard', effect:{ rep:25, money:-200000 } },
+    ]},
+];
+
+// ── ACHIEVEMENTS ───────────────────────────────────────────
+const ACHIEVEMENTS = [
+  { id:'a_first_hire',    emoji:'👥', name:'First Hire',          desc:'Hire your first employee',                check: g => g.team.length >= 2 },
+  { id:'a_first_100k',   emoji:'💰', name:'Six Figures',         desc:'Reach $100K in cash',                     check: g => g.money >= 100000 },
+  { id:'a_first_product',emoji:'🚀', name:'Shipped!',            desc:'Launch your first product',               check: g => g.products.some(p=>p.active) },
+  { id:'a_first_million',emoji:'💎', name:'Millionaire',         desc:'Reach $1M valuation',                     check: g => g.valuation >= 1000000 },
+  { id:'a_first_research',emoji:'🔬', name:'Scientist',          desc:'Complete your first research',            check: g => g.researched.length >= 1 },
+  { id:'a_unicorn',      emoji:'🦄', name:'Unicorn',             desc:'Reach $1B valuation',                     check: g => g.valuation >= 1000000000 },
+  { id:'a_team10',       emoji:'🏢', name:'Real Company',        desc:'Build a team of 10+',                     check: g => g.team.length >= 10 },
+  { id:'a_crisis5',      emoji:'🔥', name:'Crisis Veteran',      desc:'Survive 5 random crises',                 check: g => g.crisisWeathered >= 5 },
+  { id:'a_rival_kill',   emoji:'💀', name:'Eliminator',          desc:'Eliminate a rival company',               check: g => g.rivalsAcquired >= 1 },
+  { id:'a_decacorn',     emoji:'🌟', name:'Decacorn',            desc:'Reach $10B valuation',                    check: g => g.valuation >= 10000000000 },
+  { id:'a_research5',    emoji:'🧪', name:'R&D Machine',         desc:'Complete 5 research projects',            check: g => g.researched.length >= 5 },
+  { id:'a_chapter3',     emoji:'🌱', name:'Seed Stage',          desc:'Reach Chapter 3',                         check: g => g.chapter >= 3 },
+  { id:'a_chapter5',     emoji:'📈', name:'Going Public',        desc:'Reach Chapter 5',                         check: g => g.chapter >= 5 },
+  { id:'a_morale_high',  emoji:'❤️',  name:'Great Place to Work', desc:'Reach 80+ team morale',                 check: g => g.morale >= 80 },
+  { id:'a_media10',      emoji:'🎙️', name:'Media Darling',       desc:'Earn 10 press mentions',                 check: g => g.pressMentions >= 10 },
+  { id:'a_100b',         emoji:'👑', name:'The Crown',           desc:'Reach $100B valuation',                   check: g => g.valuation >= 100000000000 },
+];
+
+// ── MORALE SYSTEM ──────────────────────────────────────────
+const MORALE_EVENTS = [
+  { trigger: 'good_decision', delta: +5,  msg: 'Team is energized by your leadership! +5 morale' },
+  { trigger: 'bad_decision',  delta: -8,  msg: 'Team morale dipped after recent events. -8 morale' },
+  { trigger: 'layoff',        delta: -20, msg: 'Layoffs hit morale hard. -20 morale' },
+  { trigger: 'raise',         delta: +15, msg: 'Across-the-board raise boosted morale! +15 morale' },
+  { trigger: 'viral_win',     delta: +10, msg: 'Team is pumped after going viral! +10 morale' },
+  { trigger: 'crisis',        delta: -5,  msg: 'Crisis mode is exhausting the team. -5 morale' },
+];
+
+// ── PRESS / MEDIA ──────────────────────────────────────────
+const PRESS_OUTLETS = [
+  { name:'TechCrunch',      tier:1, reachM:8,   emoji:'📰' },
+  { name:'The Information', tier:2, reachM:2,   emoji:'📊' },
+  { name:'Bloomberg',       tier:2, reachM:15,  emoji:'📡' },
+  { name:'New York Times',  tier:3, reachM:40,  emoji:'🗞️' },
+  { name:'Lex Fridman Pod', tier:3, reachM:8,   emoji:'🎙️' },
+  { name:'60 Minutes',      tier:4, reachM:60,  emoji:'📺' },
+  { name:'TIME Magazine',   tier:4, reachM:50,  emoji:'🏆' },
+];
+
+// ── INTERNATIONAL OFFICES ──────────────────────────────────
+const INTL_OFFICES = [
+  { id:'london',    city:'London',    emoji:'🇬🇧', cost:500000,   bonus:{ rep:15, monthlyRevenue:50000 },  challenge:'EU AI Act compliance required' },
+  { id:'singapore', city:'Singapore', emoji:'🇸🇬', cost:800000,   bonus:{ rep:20, monthlyRevenue:80000 },  challenge:'APAC talent market is competitive' },
+  { id:'tokyo',     city:'Tokyo',     emoji:'🇯🇵', cost:1000000,  bonus:{ rep:25, monthlyRevenue:100000 }, challenge:'Japanese enterprise sales cycles are long' },
+  { id:'dubai',     city:'Dubai',     emoji:'🇦🇪', cost:600000,   bonus:{ rep:18, monthlyRevenue:70000 },  challenge:'Government partnership required' },
+  { id:'toronto',   city:'Toronto',   emoji:'🇨🇦', cost:400000,   bonus:{ rep:12, monthlyRevenue:40000 },  challenge:'AI talent hub — poaching risk high' },
+];
+
+// ── BOARD MEMBERS ──────────────────────────────────────────
+const BOARD_MEMBERS = [
+  { name:'Patricia Walsh',  role:'Lead Investor',    emoji:'💼', trust:70, personality:'financial',  pref:'revenue growth' },
+  { name:'Dr. Alan Torres', role:'Independent',      emoji:'🎓', trust:80, personality:'technical',  pref:'R&D investment' },
+  { name:'Sandra Kim',      role:'Investor Rep',     emoji:'📊', trust:65, personality:'aggressive', pref:'market share' },
+  { name:'James Whitfield', role:'Founder Advocate', emoji:'🤝', trust:90, personality:'founder',    pref:'long-term vision' },
+];
+
+
+// ── FOUNDER SKILL TREE ─────────────────────────────────────
+const FOUNDER_SKILLS = [
+  // Row 1 - Tier 1 (unlockable from start)
+  { id:'fs_hustle',     name:'Infinite Hustle',    emoji:'⚡', tier:1, cost:3,
+    desc:'You ship 20% faster. All research completes in less time.',
+    effect:{ researchSpeed:0.2 }, requires:[] },
+  { id:'fs_vision',     name:'The Vision',         emoji:'🔭', tier:1, cost:3,
+    desc:'Your valuation multiplier increases by 1.5x. Investors see something others do not.',
+    effect:{ valuationMult:1.5 }, requires:[] },
+  { id:'fs_networker',  name:'Super Networker',    emoji:'🤝', tier:1, cost:3,
+    desc:'Hiring costs 30% less. Every new hire brings a referral.',
+    effect:{ hireCostMult:0.7 }, requires:[] },
+
+  // Row 2 - Tier 2
+  { id:'fs_silver',     name:'Silver Tongue',      emoji:'🗣️', tier:2, cost:5,
+    desc:'All funding rounds get 20% better terms. Board trust decays 50% slower.',
+    effect:{ fundingBonus:0.2 }, requires:['fs_networker'] },
+  { id:'fs_warroom',    name:'War Room',           emoji:'🎯', tier:2, cost:5,
+    desc:'Counter rival moves for free once per month. Rivals grow 15% slower.',
+    effect:{ rivalSlowPassive:0.15, freeCounters:1 }, requires:['fs_hustle'] },
+  { id:'fs_press',      name:'Media Darling',      emoji:'📺', tier:2, cost:4,
+    desc:'Every press mention gives +5 extra rep. Viral events happen more often.',
+    effect:{ pressRepBonus:5 }, requires:['fs_vision'] },
+
+  // Row 3 - Tier 3
+  { id:'fs_resilience', name:'Unbreakable',        emoji:'🛡️', tier:3, cost:7,
+    desc:'Crises deal 50% less damage to morale and board trust. You thrive under pressure.',
+    effect:{ crisisDampen:0.5 }, requires:['fs_warroom','fs_silver'] },
+  { id:'fs_visionary2', name:'10x Thinking',       emoji:'🧠', tier:3, cost:7,
+    desc:'Research unlocks give double tech bonuses. Your breakthroughs are generational.',
+    effect:{ researchTechMult:2 }, requires:['fs_press','fs_vision'] },
+  { id:'fs_empire',     name:'Empire Builder',     emoji:'👑', tier:3, cost:8,
+    desc:'International offices cost 40% less. Each office generates 2x revenue.',
+    effect:{ intlCostMult:0.6, intlRevMult:2 }, requires:['fs_silver','fs_press'] },
+
+  // Row 4 - Tier 4 (late game)
+  { id:'fs_legacy',     name:'Legend Status',      emoji:'🌟', tier:4, cost:10,
+    desc:'Your reputation never drops below 50. Every decision adds +2 rep passively.',
+    effect:{ minRep:50, passiveRep:2 }, requires:['fs_resilience','fs_visionary2'] },
+  { id:'fs_agi_mind',   name:'AGI Intuition',      emoji:'🧬', tier:4, cost:12,
+    desc:'Unlock secret story paths. The final chapter reveals a hidden ending.',
+    effect:{ secretPaths:true }, requires:['fs_visionary2','fs_empire'] },
+];
+
+// ── RIVAL PERSONALITIES ─────────────────────────────────────
+const RIVAL_PERSONALITIES = {
+  devflow: {
+    style: 'aggressive',
+    traits: ['Loud on social media', 'Ships fast, breaks things', 'Fundraises recklessly'],
+    weaknesses: ['Technical debt', 'Team burnout', 'Shallow product'],
+    catchphrase: 'Move fast, win markets.',
+    eventFrequency: 'high',
+    riskProfile: 'volatile', // can crash hard or grow huge
+  },
+  aether: {
+    style: 'methodical',
+    traits: ['Research-first', 'Slow to market', 'Exceptional talent'],
+    weaknesses: ['Poor distribution', 'Slow iteration', 'Academic not commercial'],
+    catchphrase: 'The science will speak for itself.',
+    eventFrequency: 'low',
+    riskProfile: 'steady',
+  },
+  synthex: {
+    style: 'predatory',
+    traits: ['Poaches aggressively', 'Patent wars', 'Enterprise focus'],
+    weaknesses: ['Hated by developers', 'Legal exposure', 'No consumer brand'],
+    catchphrase: 'We do not compete. We dominate.',
+    eventFrequency: 'med',
+    riskProfile: 'dangerous',
+  },
+  bigtech_ai: {
+    style: 'overwhelming',
+    traits: ['Unlimited budget', 'Slow decision making', 'Distribution king'],
+    weaknesses: ['Bureaucracy', 'Cannot innovate fast', 'Regulatory scrutiny'],
+    catchphrase: 'We are the platform.',
+    eventFrequency: 'low',
+    riskProfile: 'unstoppable_unless_outmaneuvered',
+  },
+};
+
+// ── EMAIL INBOX ─────────────────────────────────────────────
+const EMAIL_TEMPLATES = [
+  { id:'em_tc_interview', from:'sarah@techcrunch.com', fromName:'Sarah Mitchell',
+    subject:'Interview Request - NexMind Story', chapter:1,
+    body:'Hi Alex, I am writing a piece on self-taught founders disrupting AI. Would love 30 minutes of your time. This could be your first major press hit.',
+    choices:[
+      { label:'📰 Accept interview', effect:{ rep:15, pressMentions:1 }, reply:'Absolutely. Thursday at 2pm works.' },
+      { label:'❌ Decline (too busy shipping)', effect:{ tech:3 }, reply:'Not right now, maybe next month.' },
+    ]},
+  { id:'em_yc_rejection', from:'admissions@ycombinator.com', fromName:'YC Admissions',
+    subject:'Re: NexMind Application', chapter:1,
+    body:'Hi Alex. Thank you for applying to YC. After careful review, we are passing this batch. Your metrics are too early. We encourage you to apply again when you have more traction.',
+    choices:[
+      { label:'💪 Reply: We will prove you wrong', effect:{ rep:5 }, reply:'Watch us.' },
+      { label:'🙏 Reply: Thank you, will apply again', effect:{ boardTrust:2 }, reply:'Understood. We will be back stronger.' },
+    ]},
+  { id:'em_engineer_offer', from:'recruiting@bigtech.com', fromName:'BigTech Recruiting',
+    subject:'Offer for your Lead Engineer', chapter:2,
+    body:'We have extended an offer to one of your engineers. We wanted to reach out directly to give you a chance to retain them. Standard practice.',
+    choices:[
+      { label:'💰 Counter with 30% raise', effect:{ money:-80000, morale:5 }, reply:'We are matching and beating your offer.' },
+      { label:'🤝 Let them go gracefully', effect:{ morale:-10, rep:5 }, reply:'We respect their decision.' },
+    ]},
+  { id:'em_investor_check', from:'patricia@sequoiacap.com', fromName:'Patricia Walsh',
+    subject:'Q3 Check-in', chapter:3,
+    body:'Alex, quick check-in. The board is watching the burn rate closely. We need to see a path to profitability by Q2 next year or we will need to have a harder conversation.',
+    choices:[
+      { label:'📊 Send detailed plan', effect:{ boardTrust:10 }, reply:'Attached is our path to profitability.' },
+      { label:'🚀 Push back: Growth > Profit now', effect:{ boardTrust:-5, valuation:100000000 }, reply:'We disagree. The market window requires aggression.' },
+    ]},
+  { id:'em_rival_threat', from:'jake@devflow.io', fromName:'Jake Morrison (DevFlow)',
+    subject:'Friendly warning', chapter:2,
+    body:'Alex. Heard you are going after our enterprise customers. Friendly advice: do not. We have more runway, more engineers, and our Series B closes next week. This is not a space for small players.',
+    choices:[
+      { label:'🔥 Reply: Challenge accepted', effect:{ rep:10, rivalBoost:'devflow' }, reply:'See you in the market, Jake.' },
+      { label:'🤐 No reply (ignore)', effect:{ rep:3 }, reply:null },
+      { label:'🤝 Propose territory split', effect:{ money:20000 }, reply:'Maybe we can avoid a war. Call me.' },
+    ]},
+  { id:'em_journalist_leak', from:'marcus@theinformation.com', fromName:'Marcus Chen',
+    subject:'Story running tomorrow - comment?', chapter:3,
+    body:'Hi Alex. We are running a story tomorrow claiming NexMind misrepresented its model accuracy by 23% in marketing materials. Do you have a comment before we publish?',
+    choices:[
+      { label:'✅ Acknowledge and correct publicly', effect:{ rep:-5, boardTrust:5 }, reply:'You are correct. We are issuing a correction now.' },
+      { label:'⚖️ Legal threat: kill the story', effect:{ rep:-15, money:-50000 }, reply:'Our lawyers are contacting your editor.' },
+      { label:'📞 Call Marcus off the record', effect:{ rep:5, pressMentions:1 }, reply:'Can we talk before this goes live?' },
+    ]},
+  { id:'em_acquihire', from:'bd@microsoft.com', fromName:'Microsoft Corp Dev',
+    subject:'Confidential: Acquisition Conversation', chapter:4,
+    body:'On behalf of Microsoft, we would like to explore an acquisition of NexMind at a significant premium to your last round. This is confidential. Are you open to a conversation?',
+    choices:[
+      { label:'❌ Not for sale', effect:{ rep:15, valuation:500000000 }, reply:'NexMind is not for sale. Thank you.' },
+      { label:'🤔 Open to hearing a number', effect:{ money:0 }, reply:'We are always willing to listen.' },
+    ]},
+  { id:'em_fan_engineer', from:'dev2048@gmail.com', fromName:'Anonymous Developer',
+    subject:'You changed my life', chapter:2,
+    body:'Hey Alex. I have been using NexMind since the beta. Because of it, I shipped my first SaaS and hit $5K MRR last month. I am a self-taught dev too. Thank you. You showed me it is possible.',
+    choices:[
+      { label:'💌 Reply personally', effect:{ morale:10, rep:5 }, reply:'This is exactly why we build. Keep going.' },
+      { label:'📣 Share on company Twitter', effect:{ rep:15, pressMentions:1 }, reply:'Sharing this with the world.' },
+    ]},
+  { id:'em_cofounder_fight', from:'priya@nexmind.ai', fromName:'Priya Sharma (Co-founder)',
+    subject:'We need to talk', chapter:3,
+    body:'Alex. I have been carrying the ML infrastructure alone for 8 months while you focus on fundraising. I need either a real team under me or I am reconsidering my role here. This is not sustainable.',
+    choices:[
+      { label:'🤝 Hire 2 ML engineers for her immediately', effect:{ money:-200000, morale:15 }, reply:'You are right. Headcount approved today.' },
+      { label:'📅 Schedule weekly 1-on-1s', effect:{ morale:5 }, reply:'You have my full attention. Calendly link sent.' },
+      { label:'😤 Dismiss it as stress', effect:{ morale:-20, team:-1 }, reply:'Everyone is stretched. You knew this when you joined.' },
+    ]},
+  { id:'em_government', from:'ai.office@whitehouse.gov', fromName:'White House AI Office',
+    subject:'Request for Technical Briefing', chapter:5,
+    body:'The President has requested a technical briefing from leading AI companies on the current state of artificial general intelligence. NexMind has been selected. This is not optional.',
+    choices:[
+      { label:'🏛️ Attend and advocate for light regulation', effect:{ rep:30, boardTrust:10 }, reply:'We are honored. We will be there.' },
+      { label:'📄 Send written submission only', effect:{ rep:10 }, reply:'We will submit a comprehensive written brief.' },
+    ]},
+];
+
+// ── TWITTER FEED EVENTS ─────────────────────────────────────
+const TWITTER_EVENTS = [
+  { id:'tw1', author:'@levelsio', followers:'180K',
+    text:'Just tried NexMind. This thing is genuinely different. Not hype. Thread on why 🧵',
+    type:'positive', repBonus:10 },
+  { id:'tw2', author:'@jakemdevflow', followers:'45K',
+    text:'Another day, another NexMind "breakthrough" that is just repackaged transformers with better marketing. The emperor has no clothes.',
+    type:'negative', repBonus:-5 },
+  { id:'tw3', author:'@paulg', followers:'1.2M',
+    text:'The most interesting AI company right now is not the obvious choices. NexMind is doing something genuinely new.',
+    type:'positive', repBonus:25 },
+  { id:'tw4', author:'@elonmusk', followers:'180M',
+    text:'NexMind valuation is insane. Pure hype. My companies actually ship real products.',
+    type:'negative', repBonus:-8 },
+  { id:'tw5', author:'@swyx', followers:'90K',
+    text:'I have used every AI coding tool. NexMind is 3 generations ahead. This is what the future feels like.',
+    type:'positive', repBonus:15 },
+  { id:'tw6', author:'@benedictevans', followers:'220K',
+    text:'Fascinating to watch NexMind execute. Classic innovator playbook: start narrow, expand. Most incumbents will miss this until it is too late.',
+    type:'positive', repBonus:12 },
+  { id:'tw7', author:'@jakezimmer_vc', followers:'30K',
+    text:'Hot take: NexMind raises too much at too high a valuation. The fundamentals do not support it. Bubble behavior.',
+    type:'negative', repBonus:-6 },
+  { id:'tw8', author:'@alexchen_nexmind', followers:'',
+    text:'We just hit 100,000 active developers. This is only the beginning. Thank you for believing in us. 🚀',
+    type:'self', repBonus:8, isYou:true },
+];
+
+// ── TECH DEBT SYSTEM ────────────────────────────────────────
+const TECH_DEBT_EVENTS = [
+  { threshold:30, msg:'Minor: Login latency up 200ms. Users complaining on Reddit.', damage:{ rep:-2 } },
+  { threshold:50, msg:'Moderate: API timeouts hitting 5% of requests. SLA breach risk.', damage:{ rep:-8, money:-20000 } },
+  { threshold:70, msg:'Serious: Major feature broke in production. All hands on deck.', damage:{ rep:-15, money:-50000, morale:-10 } },
+  { threshold:90, msg:'CRITICAL: Core system failure. 6 hour outage. TechCrunch is writing about it.', damage:{ rep:-30, money:-200000, morale:-20, boardTrust:-15 } },
+];
+
+// ── TICKER ITEMS ───────────────────────────────────────────
+
+const TICKER_BASE = [
+  'AI funding reaches all-time high of $45B in Q2',
+  'OpenAI reportedly in talks to raise at $200B valuation',
+  'Developer productivity up 340% with AI tools per Stack Overflow survey',
+  'Congress debates AI Regulation Act — industry divided',
+  'NVIDIA stock hits new ATH on AI chip demand',
+  'Google announces Gemini Ultra 2 — claims AGI-level reasoning',
+  'Microsoft CEO: "AI will transform every industry in 18 months"',
+  'Y Combinator W2024 batch: 40% of companies are AI-first',
+  'SF office vacancy hits 35% as remote work becomes permanent',
+  'SEC: AI companies must disclose training data sources by 2025',
+];
+
+// ── CHART DATA ─────────────────────────────────────────────
+function getValDisplay(n) {
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(1) + 'T';
+  if (n >= 1e9)  return '$' + (n/1e9).toFixed(1) + 'B';
+  if (n >= 1e6)  return '$' + (n/1e6).toFixed(1) + 'M';
+  if (n >= 1e3)  return '$' + (n/1e3).toFixed(0) + 'K';
+  return '$' + n;
+}
+function getMoneyDisplay(n) { return getValDisplay(n); }
+
+// ═══════════════════════════════════════════════════════════
+// GAME LOGIC
+// ═══════════════════════════════════════════════════════════
+
+let gameTimerInterval = null;
+
+function startGame() {
+  // Init rivals
+  G.rivals = RIVAL_TEMPLATES.filter(r => r.startChapter <= 2).map(r => ({
+    ...r, valuation: r.baseVal, hp: 100, active: true,
+    currentAction: r.actions[0],
+  }));
+  // Init products
+  G.products = PRODUCTS_DATA.map(p => ({...p}));
+  G.products[0].active = true; // CodeMind starts active
+  G.activeProducts = ['p1'];
+  // Initial team
+  G.team = [{ name:G.playerName, role:'Founder / CEO', emoji:'🧑‍💻', salary:0, skills:['Vision','Code','Hustle'] }];
+  // Valuation
+  G.valuation = 50000;
+  G.chartData = [G.valuation];
+  // Ticker
+  G.tickerItems = [...TICKER_BASE];
+  updateTicker();
+  // Init skill effects
+  computeSkillEffects();
+  // Seed first emails
+  checkEmailQueue();
+  // Show game
+  showScreen('game');
+  loadStoryNode(G.storyNode);
+  updateAllUI();
+  // Start game loop
+  gameTimerInterval = setInterval(gameTick, 8000); // Every 8s = 1 week
+  // Random events every ~30s
+  setInterval(maybeSpawnEvent, 30000);
+}
+
+function gameTick() {
+  if (G.won || G.gameOver) return;
+  G.week++;
+  if (G.week > 4) { G.week = 1; G.month++; }
+  if (G.month > 12) { G.month = 1; G.year++; }
+
+  // Revenue & costs
+  let rev = G.monthlyRevenue;
+  let costs = G.team.reduce((sum, m) => sum + (m.salary || 0), 0) / 12;
+  // Add product revenue
+  G.products.filter(p=>p.active).forEach(p => { rev += p.baseRev * (1 + G.techLevel * 0.05); });
+
+  if (G.week === 1) { // Monthly tick
+    G.money += Math.floor(rev - costs);
+    G.monthlyRevenue = rev;
+    G.monthlyCosts = costs;
+    G.chartData.push(G.valuation);
+    if (G.chartData.length > 20) G.chartData.shift();
+    if (G.money < 0) { showToast('⚠️ Dangerously low on cash!', 'bad'); }
+    // Grow rivals
+    tickRivals();
+    // Research progress
+    tickResearch();
+    // Tech debt
+    tickTechDebt();
+    // Email queue
+    checkEmailQueue();
+    // Twitter feed
+    updateTwitterFeed();
+    // Skill effects
+    computeSkillEffects();
+    // Skill points on chapter milestones
+    if (G.chapter > (G._lastSkillChapter || 0)) {
+      G._lastSkillChapter = G.chapter;
+      G.skillPoints += 2;
+      showToast('🌟 +2 Skill Points earned! Spend them in the Skills tab.', 'good');
+    }
+    // Valuation milestones give skill points too
+    const valMilestones = [1e6, 10e6, 100e6, 1e9, 10e9, 100e9, 1e12];
+    valMilestones.forEach(m => {
+      if (G.valuation >= m && !G._valMilestones) G._valMilestones = {};
+      if (G.valuation >= m && G._valMilestones && !G._valMilestones[m]) {
+        G._valMilestones[m] = true;
+        G.skillPoints++;
+        G.legacyScore += 10;
+        showToast('💎 Milestone: ' + getValDisplay(m) + ' valuation! +1 Skill Point', 'good');
+      }
+    });
+    // Check chapter advance
+    checkChapterAdvance();
+  }
+
+  // Update valuation
+  G.valuation = calcValuation();
+  // New systems
+  updateStock();
+  checkAchievements();
+  // Board trust decays slightly each month if investor happiness is low
+  if (G.week === 1 && G.investorHappiness < 50) updateBoardTrust(-3);
+  if (G.week === 1 && G.investorHappiness > 70) updateBoardTrust(2);
+  // Morale slowly recovers
+  if (G.week === 2 && G.morale < 100) G.morale = Math.min(100, G.morale + 1);
+  updateAllUI();
+}
+
+function calcValuation() {
+  const base = G.monthlyRevenue * 12 * 8; // 8x ARR multiple
+  const techBonus = G.techLevel * 50000;
+  const repBonus = G.reputation * 10000;
+  const teamBonus = G.team.length * 100000;
+  return Math.max(G.valuation * 1.002, base + techBonus + repBonus + teamBonus);
+}
+
+function tickRivals() {
+  G.rivals.forEach(r => {
+    if (!r.active) return;
+    r.valuation *= 1.05 + Math.random() * 0.03;
+    r.currentAction = r.actions[Math.floor(Math.random() * r.actions.length)];
+    // Occasionally add ticker item about rival
+    if (Math.random() < 0.3) {
+      G.tickerItems.push(`${r.name} is ${r.currentAction.toLowerCase()}`);
+      updateTicker();
+    }
+  });
+}
+
+function tickResearch() {
+  if (!G.researchQueue) return;
+  G.researchProgress += 1;
+  const item = RESEARCH_ITEMS.find(r => r.id === G.researchQueue);
+  if (item && G.researchProgress >= item.cost.time) {
+    // Complete research
+    G.researched.push(G.researchQueue);
+    G.researchQueue = null;
+    G.researchProgress = 0;
+    // Apply effects
+    if (item.effect.tech) G.techLevel += item.effect.tech;
+    if (item.effect.rep) G.reputation += item.effect.rep;
+    if (item.effect.monthlyRevenue) G.monthlyRevenue += item.effect.monthlyRevenue;
+    if (item.effect.valuation) G.valuation += item.effect.valuation;
+    showToast(`✅ Research Complete: ${item.name}!`, 'good');
+    renderResearch();
+  }
+}
+
+function checkChapterAdvance() {
+  const ch = CHAPTERS[G.chapter - 1];
+  const next = CHAPTERS[G.chapter];
+  if (next && G.valuation >= next.minVal) {
+    G.chapter++;
+    // Unlock new rivals
+    RIVAL_TEMPLATES.filter(r => r.startChapter === G.chapter && !G.rivals.find(x=>x.id===r.id)).forEach(r => {
+      G.rivals.push({ ...r, valuation: r.baseVal, hp: 100, active: true, currentAction: r.actions[0] });
+    });
+    // Unlock new products
+    G.products.filter(p => p.unlockChapter <= G.chapter && !p.active && !G.activeProducts.includes(p.id))
+      .forEach(p => { showToast(`🆕 New product unlocked: ${p.name}!`, 'info'); });
+    showToast(`🚀 Chapter ${G.chapter}: ${CHAPTERS[G.chapter-1].name}!`, 'good');
+    document.getElementById('chapterBadge').textContent = `CH.${G.chapter}`;
+  }
+}
+
+function maybeSpawnEvent() {
+  if (G.won || G.gameOver || G.pendingEvent) return;
+  const allEvents = [...RANDOM_EVENTS, ...EXTRA_EVENTS];
+  const eligible = allEvents.filter(e => !G.events.includes(e.id));
+  if (eligible.length === 0) return;
+  if (Math.random() < 0.65) {
+    const event = eligible[Math.floor(Math.random() * eligible.length)];
+    G.events.push(event.id);
+    showEvent(event);
+  }
+}
+
+function checkAchievements() {
+  ACHIEVEMENTS.forEach(a => {
+    if (!G.achievements.includes(a.id) && a.check(G)) {
+      G.achievements.push(a.id);
+      showAchievementPopup(a);
+    }
+  });
+}
+
+function showAchievementPopup(a) {
+  const t = document.getElementById('toast');
+  t.innerHTML = `${a.emoji} <strong>ACHIEVEMENT:</strong> ${a.name} — ${a.desc}`;
+  t.className = 'toast good show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 4000);
+}
+
+function updateMorale(delta, reason) {
+  G.morale = Math.max(0, Math.min(100, G.morale + delta));
+  if (Math.abs(delta) >= 5) showToast(`${delta>0?'😊':'😟'} Morale: ${delta>0?'+':''}${delta} (${reason})`, delta>0?'good':'bad');
+  // Low morale causes random resignations
+  if (G.morale < 30 && G.team.length > 1 && Math.random() < 0.3) {
+    const leaver = G.team.find(m => m.name !== G.playerName);
+    if (leaver) {
+      G.team = G.team.filter(m => m !== leaver);
+      showToast(`😢 ${leaver.name} resigned due to low morale!`, 'bad');
+    }
+  }
+}
+
+function updateStock() {
+  // Stock follows valuation with volatility
+  const targetPrice = G.valuation / 1e8;
+  const volatility = (Math.random() - 0.48) * 0.08;
+  G.stockPrice = Math.max(0.01, G.stockPrice * (1 + volatility) * 0.95 + targetPrice * 0.05);
+  G.stockHistory.push(parseFloat(G.stockPrice.toFixed(2)));
+  if (G.stockHistory.length > 30) G.stockHistory.shift();
+  // Investor happiness based on stock trend
+  const trend = G.stockHistory.length > 2 ?
+    G.stockHistory[G.stockHistory.length-1] / G.stockHistory[G.stockHistory.length-3] : 1;
+  G.investorHappiness = Math.max(0, Math.min(100, G.investorHappiness + (trend > 1 ? 3 : -4)));
+  // Board fires you if trust too low
+  if (G.boardTrust < 20 && !G.won) {
+    showToast('💀 GAME OVER: Board of Directors voted to remove you as CEO.', 'bad');
+    G.gameOver = true;
+    setTimeout(() => showGameOver(), 2000);
+  }
+}
+
+function updateBoardTrust(delta) {
+  G.boardTrust = Math.max(0, Math.min(100, G.boardTrust + delta));
+}
+
+function showGameOver() {
+  const cont = document.getElementById('storyContent');
+  cont.innerHTML = `
+    <div class="story-card" style="border-color:rgba(255,51,102,.4)">
+      <div class="story-header">
+        <span class="chapter-num" style="color:var(--red);border-color:rgba(255,51,102,.3)">GAME OVER</span>
+        <div class="story-title" style="color:var(--red)">The Board Fired You</div>
+      </div>
+      <div class="story-body">
+        <span class="warning">The board voted 3-1 to remove you as CEO of NexMind.</span>
+        You built something incredible, but lost the trust of the people who controlled the company.
+        This happens to the best founders. Learn from it.<br><br>
+        <span class="highlight">Final valuation: ${getValDisplay(G.valuation)}</span><br>
+        <span class="highlight">Chapter reached: ${G.chapter}</span><br>
+        <span class="highlight">Decisions made: ${G.totalDecisions}</span>
+      </div>
+    </div>
+    <button class="btn-primary btn-gold" onclick="restartGame()" style="margin-top:12px">▶ Try Again</button>
+  `;
+  switchTabDirect('panelStory');
+}
+
+function switchTabDirect(panelId) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+}
+
+function showEvent(event) {
+  G.pendingEvent = event;
+  const box = document.getElementById('eventBox');
+  box.className = 'event-box ' + (event.type === 'crisis' ? 'crisis' : event.type === 'opportunity' ? 'opportunity' : 'rival');
+  document.getElementById('evEmoji').textContent = event.emoji;
+  document.getElementById('evTitle').textContent = event.title;
+  const tag = document.getElementById('evTag');
+  tag.textContent = event.tag;
+  tag.className = 'event-type-tag ' + event.tagClass;
+  document.getElementById('evDesc').textContent = event.desc;
+  const choices = document.getElementById('evChoices');
+  choices.innerHTML = event.choices.map((c,i) => `
+    <button class="event-choice" onclick="resolveEvent(${i})">
+      <span class="choice-text">${c.text}</span>
+      <span class="choice-hint">${c.hint}</span>
+    </button>`).join('');
+  document.getElementById('eventOverlay').classList.add('show');
+}
+
+function resolveEvent(choiceIdx) {
+  const event = G.pendingEvent;
+  if (!event) return;
+  const choice = event.choices[choiceIdx];
+  applyEffects(choice.effect || {});
+  G.pendingEvent = null;
+  G.totalDecisions++;
+  if (event.type === 'crisis') {
+    G.crisisWeathered++;
+    updateMorale(-5, 'Crisis stress');
+    updateBoardTrust(-2);
+  } else if (event.type === 'opportunity') {
+    updateMorale(5, 'Exciting opportunity!');
+    updateBoardTrust(2);
+    G.pressMentions++;
+  }
+  // Ticker update about the event
+  G.tickerItems.push(`BREAKING: ${event.title} — NexMind responds`);
+  updateTicker();
+  checkAchievements();
+  document.getElementById('eventOverlay').classList.remove('show');
+  updateAllUI();
+}
+
+// ── STORY ENGINE ────────────────────────────────────────────
+function loadStoryNode(nodeId) {
+  G.storyNode = nodeId;
+  const node = STORY[nodeId];
+  if (!node) return;
+  renderStory(node);
+}
+
+function applyEffects(effects) {
+  if (!effects) return;
+  if (effects.money)        G.money        += effects.money;
+  if (effects.rep)          G.reputation   = Math.max(0, G.reputation + effects.rep);
+  if (effects.tech)         G.techLevel    = Math.max(1, G.techLevel + effects.tech);
+  if (effects.valuation)    G.valuation    = Math.max(G.valuation, effects.valuation);
+  if (effects.monthlyRevenue) G.monthlyRevenue += effects.monthlyRevenue;
+  if (effects.teamAdd) {
+    if (G.team.length < G.maxTeam + 3) { // some flexibility
+      G.team.push(effects.teamAdd);
+      showToast(`✅ ${effects.teamAdd.name} joined the team!`, 'good');
+    }
+  }
+  if (effects.team && effects.team < 0) {
+    for (let i = 0; i < Math.abs(effects.team); i++) {
+      if (G.team.length > 1) G.team.pop();
+    }
+  }
+  if (effects.rivalBoost) {
+    const r = G.rivals.find(x => x.id === effects.rivalBoost);
+    if (r) { r.valuation *= 2; r.hp = Math.min(100, r.hp + 20); }
+  }
+  if (effects.rivalRemove) {
+    const r = G.rivals.find(x => x.id === effects.rivalRemove);
+    if (r) { r.active = false; G.rivalsAcquired++; showToast(`💀 ${r.name} has been eliminated!`, 'good'); }
+  }
+  if (effects.rivalSlow) {
+    const r = G.rivals.find(x => x.id === effects.rivalSlow);
+    if (r) { r.valuation *= 0.7; showToast(`📉 ${r.name} has been slowed down!`, 'good'); }
+  }
+  if (effects.won) { G.won = true; }
+  if (effects.techDebt_reduce) G.techDebt = Math.max(0, G.techDebt - effects.techDebt_reduce);
+  if (effects.techDebt_add) G.techDebt = Math.min(100, G.techDebt + effects.techDebt_add);
+  if (effects.morale) updateMorale(effects.morale, 'event outcome');
+  if (effects.boardTrust) updateBoardTrust(effects.boardTrust);
+  if (effects.pressMentions) G.pressMentions = (G.pressMentions || 0) + effects.pressMentions;
+  if (effects.rivalSlow) {
+    const r2 = G.rivals.find(x => x.id === effects.rivalSlow);
+    if (r2) { r2.valuation *= 0.7; showToast(`📉 ${r2.name} has been slowed!`, 'good'); }
+  }
+}
+
+function makeDecision(optIdx, node) {
+  const opt = node.options[optIdx];
+  G.totalDecisions++;
+  applyEffects(opt.effect || {});
+  // Morale + board effects from decisions
+  const moneyEffect = opt.effect ? (opt.effect.money || 0) : 0;
+  const repEffect = opt.effect ? (opt.effect.rep || 0) : 0;
+  if (repEffect > 10) { updateMorale(5, 'Great decision!'); updateBoardTrust(3); }
+  if (repEffect < -10) { updateMorale(-8, 'Bad press hit morale'); updateBoardTrust(-5); }
+  if (moneyEffect > 500000) { updateBoardTrust(5); }
+  if (moneyEffect < -1000000) { updateBoardTrust(-4); updateMorale(-3, 'Big spending worried team'); }
+  checkAchievements();
+  loadStoryNode(opt.result);
+  updateAllUI();
+  document.getElementById('gameBody').scrollTop = 0;
+  if (G.won) setTimeout(() => showWin(), 1500);
+}
+
+// ── RENDER FUNCTIONS ────────────────────────────────────────
+function renderStory(node) {
+  const cont = document.getElementById('storyContent');
+  let html = '';
+
+  if (node.chapter) {
+    const ch = CHAPTERS[node.chapter - 1];
+    html += `
+      <div class="story-card">
+        <div class="story-header">
+          <span class="chapter-num">CHAPTER ${node.chapter}</span>
+          <span style="font-size:20px">${ch.icon}</span>
+          <div class="story-title">${node.title}</div>
+        </div>
+        <div class="story-body">${node.text.replace(/\n/g,'<br>')}</div>
+      </div>`;
+    document.getElementById('chapterBadge').textContent = `CH.${node.chapter}`;
+    // Load next decisions
+    if (node.decisions) {
+      node.decisions.forEach(d => {
+        const dec = STORY[d];
+        if (dec) html += renderDecisionNode(dec);
+      });
+    }
+  } else if (node.type === 'decision') {
+    html += renderDecisionNode(node);
+  } else if (node.type === 'result') {
+    html += renderResultNode(node);
+    // Auto-load next
+    if (node.next) {
+      setTimeout(() => {
+        const nextNode = STORY[node.next];
+        if (nextNode) {
+          const existing = document.getElementById('storyContent').innerHTML;
+          document.getElementById('storyContent').innerHTML = existing + renderStoryNodeHTML(nextNode);
+          attachDecisionHandlers();
+        }
+      }, 600);
+    }
+  }
+
+  cont.innerHTML = html;
+  attachDecisionHandlers();
+}
+
+function renderStoryNodeHTML(node) {
+  if (!node) return '';
+  if (node.chapter) {
+    const ch = CHAPTERS[node.chapter - 1];
+    let html = `
+      <div class="story-card">
+        <div class="story-header">
+          <span class="chapter-num">CHAPTER ${node.chapter}</span>
+          <span style="font-size:20px">${ch.icon}</span>
+          <div class="story-title">${node.title}</div>
+        </div>
+        <div class="story-body">${node.text.replace(/\n/g,'<br>')}</div>
+      </div>`;
+    if (node.decisions) {
+      node.decisions.forEach(d => { const dec = STORY[d]; if (dec) html += renderDecisionNode(dec); });
+    }
+    return html;
+  }
+  if (node.type === 'decision') return renderDecisionNode(node);
+  if (node.type === 'result') return renderResultNode(node);
+  return '';
+}
+
+function renderDecisionNode(node) {
+  return `
+    <div class="decision-card">
+      <div class="dec-header">// DECISION REQUIRED</div>
+      <div class="dec-question">${node.question}</div>
+      <div class="dec-options">
+        ${node.options.map((o,i) => `
+          <button class="dec-opt" data-node="${G.storyNode}" data-idx="${i}">
+            <span class="dec-opt-text">${o.text}</span>
+            <span class="dec-opt-cost ${
+              o.cost && o.cost.includes('+') ? 'green' :
+              o.cost && (o.cost.includes('-') || o.cost.includes('risk')) ? 'red' : 'gold'
+            }">${o.cost || ''}</span>
+          </button>`).join('')}
+      </div>
+    </div>`;
+}
+
+function renderResultNode(node) {
+  return `
+    <div class="result-card result-${node.tone}">
+      <div class="result-header">
+        <span class="result-icon">${node.icon}</span>
+        <span class="result-title" style="color:${node.tone==='good'?'var(--green)':node.tone==='bad'?'var(--red)':'var(--cyan)'}">${node.title}</span>
+      </div>
+      <div class="result-body">${node.text.replace(/\n/g,'<br>')}</div>
+      ${node.effects ? `<div class="result-effects">
+        ${node.effects.map(e => `<span class="effect-chip ${e.startsWith('+')?'pos':e.startsWith('-')?'neg':''}">${e}</span>`).join('')}
+      </div>` : ''}
+    </div>`;
+}
+
+function attachDecisionHandlers() {
+  document.querySelectorAll('.dec-opt[data-idx]').forEach(btn => {
+    btn.onclick = function() {
+      const idx = parseInt(this.dataset.idx);
+      const nodeId = this.dataset.node;
+      const node = STORY[nodeId];
+      if (node && node.type === 'decision') {
+        makeDecision(idx, node);
+      } else {
+        // Find current decision node in story chain
+        const currentNode = STORY[G.storyNode];
+        if (currentNode && currentNode.type === 'decision') {
+          makeDecision(idx, currentNode);
+        }
+      }
+    };
+  });
+}
+
+function techDebtBar() {
+  const pct = Math.floor(G.techDebt);
+  const col = pct > 70 ? 'var(--red)' : pct > 40 ? 'var(--orange)' : 'var(--green)';
+  const cls = pct > 70 ? 'red' : pct > 40 ? 'gold' : 'green';
+  const msg = pct < 30 ? 'Clean codebase' : pct < 60 ? 'Debt building up' : 'CRITICAL - failures possible';
+  const cost = Math.max(10000, Math.floor(G.valuation * 0.002));
+  return '<div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:12px">' +
+    '<div style="display:flex;justify-content:space-between;margin-bottom:4px">' +
+    '<span style="font-size:11px;color:var(--dim)">🔧 Tech Debt</span>' +
+    '<span style="font-family:var(--font-mono);font-size:11px;color:' + col + '">' + pct + '%</span></div>' +
+    '<div class="pbar"><div class="pbar-fill ' + cls + '" style="width:' + pct + '%"></div></div>' +
+    '<div style="font-size:9px;color:var(--dim);margin-top:4px">' + (pct<30?'✅ ':pct<60?'⚠️ ':'🚨 ') + msg + '</div>' +
+    (pct > 15 ? '<button onclick="payDownDebt()" style="margin-top:8px;font-family:var(--font-head);font-size:10px;padding:6px 12px;background:transparent;border:1px solid var(--cyan);color:var(--cyan);border-radius:2px;cursor:pointer;width:100%">🔧 Refactor Sprint — reduce debt 30pts · Cost: ' + getValDisplay(cost) + '</button>' : '') +
+    '</div>';
+}
+
+function payDownDebt() {
+  const cost = Math.max(10000, Math.floor(G.valuation * 0.002));
+  if (G.money < cost) { showToast('Not enough cash!', 'bad'); return; }
+  G.money -= cost;
+  G.techDebt = Math.max(0, G.techDebt - 30);
+  updateMorale(5, 'Clean codebase feels good');
+  showToast('🔧 Refactor complete! Tech debt reduced by 30pts', 'good');
+  updateAllUI();
+}
+
+function renderCompany() {
+  const cont = document.getElementById('companyContent');
+  const monthlyCosts = G.team.reduce((s,m) => s+(m.salary||0), 0) / 12;
+  const runway = monthlyCosts > 0 ? Math.floor(G.money / monthlyCosts) : 999;
+  const office = OFFICES[G.officeLevel];
+
+  // Calculate total MRR
+  const mrr = G.products.filter(p=>p.active).reduce((s,p)=>s+p.baseRev*(1+G.techLevel*.05),0) + G.monthlyRevenue;
+
+  let html = `
+    <div class="val-banner">
+      <div class="val-amount">${getValDisplay(G.valuation)}</div>
+      <div class="val-label">Company Valuation</div>
+      <div class="val-rank">${getRankString()}</div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">VALUATION HISTORY</div>
+      <canvas class="minichart" id="miniChart" width="400" height="60"></canvas>
+    </div>
+    ${techDebtBar()}
+    <div class="section-title">📊 Financials</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      ${statBox('💰 Cash', getValDisplay(G.money), G.money < 50000 ? 'var(--red)' : 'var(--green)')}
+      ${statBox('📈 MRR', getValDisplay(Math.floor(mrr)), 'var(--cyan)')}
+      ${statBox('💸 Monthly Burn', getValDisplay(Math.floor(monthlyCosts)), 'var(--orange)')}
+      ${statBox('⏳ Runway', runway > 999 ? '∞' : runway + ' mo', runway < 3 ? 'var(--red)' : 'var(--text)')}
+    </div>
+
+    <div class="section-title">🏢 Office — ${office.name}</div>
+    <div class="office-card">
+      <div class="office-icon">${office.icon}</div>
+      <div class="office-info">
+        <div class="office-name">${office.name}</div>
+        <div class="office-desc">${office.desc}</div>
+        <div class="office-cost">Capacity: ${G.maxTeam} people</div>
+      </div>
+    </div>
+    ${G.officeLevel < OFFICES.length - 1 ? `
+      <button class="btn-primary btn-gold" onclick="upgradeOffice()">
+        Upgrade to ${OFFICES[G.officeLevel+1].name} — ${getValDisplay(OFFICES[G.officeLevel+1].cost)}
+      </button>` : '<div class="empty-state">Maximum office achieved 🏛️</div>'}
+
+    <div class="divider"></div>
+    <div class="section-title">👥 Team (${G.team.length}/${G.maxTeam})</div>
+    ${G.team.map(m => `
+      <div class="hire-card">
+        <div class="hire-avatar">${m.emoji}</div>
+        <div class="hire-info">
+          <div class="hire-name">${m.name}</div>
+          <div class="hire-role">${m.role}</div>
+          <div class="hire-skills">${(m.skills||[]).map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+        </div>
+        <div class="hire-cost">
+          <div class="hire-salary">${m.salary ? getValDisplay(m.salary)+'/yr' : 'Equity'}</div>
+        </div>
+      </div>`).join('')}
+
+    <div class="divider"></div>
+    <div class="section-title">🛍️ Products</div>
+    <div class="product-grid">
+      ${G.products.map(p => {
+        const unlocked = p.unlockChapter <= G.chapter;
+        return `<div class="product-card ${p.active?'active-product':''} ${!unlocked?'locked':''}" onclick="${unlocked?`toggleProduct('${p.id}')`:''}" >
+          <span class="product-badge ${p.active?'badge-active':!unlocked?'badge-locked':'badge-dev'}">${p.active?'LIVE':!unlocked?`CH${p.unlockChapter}`:'READY'}</span>
+          <div class="product-icon">${p.icon}</div>
+          <div class="product-name">${p.name}</div>
+          <div class="product-rev">${p.active?'~'+getValDisplay(Math.floor(p.baseRev*(1+G.techLevel*.05)))+'/mo':'Inactive'}</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-title">🧑‍💼 Hire Engineers</div>
+    ${HIRE_POOL.filter(h => h.minChapter <= G.chapter && !G.team.find(t=>t.name===h.name)).slice(0,4).map(h => `
+      <div class="hire-card">
+        <div class="hire-avatar">${h.emoji}</div>
+        <div class="hire-info">
+          <div class="hire-name">${h.name}</div>
+          <div class="hire-role">${h.role}</div>
+          <div class="hire-skills">${h.skills.map(s=>`<span class="skill-tag">${s}</span>`).join('')}</div>
+        </div>
+        <div class="hire-cost">
+          <div class="hire-salary">${getValDisplay(h.salary)}/yr</div>
+          <button class="hire-btn" onclick="hireEngineer('${h.name}')">Hire</button>
+        </div>
+      </div>`).join('') || '<div class="empty-state">No candidates available at your stage</div>'}
+  `;
+  cont.innerHTML = html;
+  drawMiniChart();
+}
+
+function statBox(label, val, color='var(--bright)') {
+  return `<div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:10px;text-align:center">
+    <div style="font-family:var(--font-mono);font-size:13px;color:${color}">${val}</div>
+    <div style="font-size:10px;color:var(--dim);margin-top:2px">${label}</div>
+  </div>`;
+}
+
+function drawMiniChart() {
+  const canvas = document.getElementById('miniChart');
+  if (!canvas) return;
+  const ctx2 = canvas.getContext('2d');
+  const W2 = canvas.offsetWidth * devicePixelRatio || 400;
+  const H2 = 60;
+  canvas.width = W2;
+  canvas.height = H2;
+  ctx2.clearRect(0,0,W2,H2);
+  const data = [...G.chartData, G.valuation];
+  if (data.length < 2) return;
+  const min = Math.min(...data) * 0.9;
+  const max = Math.max(...data) * 1.1;
+  const range = max - min || 1;
+  const pts = data.map((v,i) => ({ x: (i/(data.length-1)) * W2, y: H2 - ((v-min)/range) * H2 * 0.85 - 4 }));
+  // Fill
+  const grad = ctx2.createLinearGradient(0,0,0,H2);
+  grad.addColorStop(0,'rgba(0,255,136,.2)');
+  grad.addColorStop(1,'rgba(0,255,136,0)');
+  ctx2.fillStyle = grad;
+  ctx2.beginPath();
+  ctx2.moveTo(pts[0].x, H2);
+  pts.forEach(p => ctx2.lineTo(p.x, p.y));
+  ctx2.lineTo(pts[pts.length-1].x, H2);
+  ctx2.closePath(); ctx2.fill();
+  // Line
+  ctx2.strokeStyle = '#00ff88'; ctx2.lineWidth = 2;
+  ctx2.beginPath();
+  pts.forEach((p,i) => i===0 ? ctx2.moveTo(p.x,p.y) : ctx2.lineTo(p.x,p.y));
+  ctx2.stroke();
+}
+
+function renderRivals() {
+  const cont = document.getElementById('rivalsContent');
+  const active = G.rivals.filter(r => r.active);
+  if (!active.length) { cont.innerHTML = '<div class="empty-state">No active rivals yet. They\'re coming.</div>'; return; }
+
+  // Rankings table
+  const allCompanies = [
+    { name: G.companyName, val: G.valuation, you: true },
+    ...active.map(r => ({ name: r.name, val: r.valuation, you: false })),
+    { name: 'OpenAI', val: 200000000000, you: false },
+    { name: 'Google DeepMind', val: 2000000000000, you: false },
+    { name: 'Microsoft AI', val: 3000000000000, you: false },
+  ].sort((a,b) => b.val - a.val);
+
+  let html = `
+    <div class="section-title">🏆 AI Company Rankings</div>
+    <table class="rank-table">
+      <thead><tr><th>#</th><th>Company</th><th>Valuation</th></tr></thead>
+      <tbody>
+        ${allCompanies.slice(0,8).map((c,i) => `
+          <tr ${c.you?'class="rank-you"':''}>
+            <td class="rank-num">${i+1}</td>
+            <td>${c.you?'⭐ ':''}${c.name}</td>
+            <td class="rank-val">${getValDisplay(c.val)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+
+    <div class="section-title">⚔️ Active Rivals</div>
+    ${active.map(r => `
+      <div class="rival-card">
+        <div class="rival-header">
+          <div class="rival-logo" style="background:${r.color}22;border:1px solid ${r.color}44">${r.emoji}</div>
+          <div style="flex:1">
+            <div class="rival-name">${r.name}</div>
+            <div class="rival-tag">Founded by ${r.founder}</div>
+          </div>
+          <span class="rival-threat threat-${r.valuation > G.valuation ? 'high' : r.valuation > G.valuation * 0.5 ? 'med' : 'low'}">
+            ${r.valuation > G.valuation ? '🔴 THREAT' : r.valuation > G.valuation * 0.5 ? '🟡 GROWING' : '🟢 BEHIND'}
+          </span>
+        </div>
+        <div class="rival-body">
+          <div class="rival-stat-row">
+            ${rivalStatBox('Valuation', getValDisplay(r.valuation))}
+            ${rivalStatBox('vs You', r.valuation > G.valuation ? '▲ AHEAD' : `${Math.floor(G.valuation/r.valuation*100)}% behind`)}
+          </div>
+          <div class="pbar-wrap">
+            <div class="pbar-label"><span>Threat Level</span><span>${Math.min(100,Math.floor(r.valuation/G.valuation*100))}%</span></div>
+            <div class="pbar"><div class="pbar-fill red" style="width:${Math.min(100,Math.floor(r.valuation/G.valuation*100))}%"></div></div>
+          </div>
+          <div class="rival-action">▶ Currently: ${r.currentAction}</div>
+          ${RIVAL_PERSONALITIES[r.id] ? '<div style="margin-top:6px;padding:6px 8px;background:rgba(0,0,0,.3);border-radius:3px"><div style="font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">PERSONALITY: ' + RIVAL_PERSONALITIES[r.id].style.toUpperCase() + '</div><div style="font-size:10px;color:var(--orange);font-style:italic">"' + RIVAL_PERSONALITIES[r.id].catchphrase + '"</div><div style="font-size:9px;color:var(--dim);margin-top:4px">Weakness: ' + RIVAL_PERSONALITIES[r.id].weaknesses[0] + '</div></div>' : ''}
+          <button class="btn-primary btn-danger" style="margin-top:8px" onclick="attackRival('${r.id}')">
+            ⚡ Counter ${r.name} Move
+          </button>
+        </div>
+      </div>`).join('')}
+  `;
+  cont.innerHTML = html;
+}
+
+function rivalStatBox(label, val) {
+  return `<div class="rival-stat"><div class="rival-stat-n">${val}</div><div class="rival-stat-l">${label}</div></div>`;
+}
+
+function attackRival(id) {
+  const rival = G.rivals.find(r => r.id === id);
+  if (!rival) return;
+  const cost = Math.floor(G.valuation * 0.005);
+  if (G.money < cost) { showToast('Not enough cash to counter!', 'bad'); return; }
+  G.money -= cost;
+  rival.valuation *= 0.85;
+  const msgs = [
+    `You launched a counter-campaign against ${rival.name}. Their growth slowed.`,
+    `You poached 3 engineers from ${rival.name}. Tech advantage gained.`,
+    `You fast-tracked a feature that neutralizes ${rival.name} main differentiator.`,
+    `You sealed an exclusive partnership that blocked ${rival.name} from a key market.`,
+  ];
+  showToast(msgs[Math.floor(Math.random()*msgs.length)], 'good');
+  G.reputation += 3;
+  updateAllUI();
+}
+
+function renderResearch() {
+  const cont = document.getElementById('researchContent');
+  let html = `<div class="section-title">🔬 Research & Development</div>`;
+
+  if (G.researchQueue) {
+    const item = RESEARCH_ITEMS.find(r => r.id === G.researchQueue);
+    if (item) {
+      const pct = Math.floor(G.researchProgress / item.cost.time * 100);
+      html += `
+        <div class="story-card" style="margin-bottom:12px;border-color:rgba(0,148,255,.3)">
+          <div style="padding:12px 14px">
+            <div style="font-family:var(--font-mono);font-size:10px;color:var(--blue);margin-bottom:4px">IN PROGRESS</div>
+            <div style="font-weight:600;color:var(--bright)">${item.icon} ${item.name}</div>
+            <div class="pbar-wrap" style="margin-top:8px">
+              <div class="pbar-label"><span>Progress</span><span>${pct}%</span></div>
+              <div class="pbar"><div class="pbar-fill blue" style="width:${pct}%"></div></div>
+            </div>
+          </div>
+        </div>`;
+    }
+  }
+
+  html += `<div class="research-tree">`;
+  RESEARCH_ITEMS.forEach(item => {
+    const done = G.researched.includes(item.id);
+    const inQueue = G.researchQueue === item.id;
+    const prereqsMet = item.requires.every(r => G.researched.includes(r));
+    const canAfford = G.money >= item.cost.money;
+    const locked = !prereqsMet;
+    const tierColors = ['','var(--green)','var(--cyan)','var(--gold)','var(--orange)','var(--red)'];
+
+    html += `
+      <div class="research-card ${done?'researched':''} ${locked?'locked':''}"
+           onclick="${!locked&&!done&&!inQueue?`startResearch('${item.id}')`:''}" >
+        <div class="research-header">
+          <span class="research-icon">${item.icon}</span>
+          <div>
+            <div class="research-name">${item.name}</div>
+            <div class="research-tier" style="color:${tierColors[item.tier]||'var(--dim)'}">Tier ${item.tier} Research</div>
+          </div>
+        </div>
+        <div class="research-desc">${item.desc}</div>
+        <div class="research-footer">
+          <div class="research-cost" style="color:${canAfford?'var(--gold)':'var(--red)'}">
+            ${done?'✅ Complete':getValDisplay(item.cost.money)+' · '+item.cost.time+' weeks'}
+          </div>
+          <span class="research-status ${done?'rs-done':inQueue?'rs-building':locked?'rs-locked':'rs-avail'}">
+            ${done?'DONE':inQueue?'BUILDING':locked?'🔒 LOCKED':'RESEARCH'}
+          </span>
+        </div>
+        ${item.requires.length ? `<div style="font-size:10px;color:var(--dim);margin-top:6px">Requires: ${item.requires.map(r=>{const ri=RESEARCH_ITEMS.find(x=>x.id===r);return ri?ri.name:r}).join(', ')}</div>` : ''}
+      </div>`;
+  });
+  html += `</div>`;
+  cont.innerHTML = html;
+}
+
+function renderMarket() {
+  const cont = document.getElementById('marketContent');
+  const yourRank = [...G.rivals.filter(r=>r.active).map(r=>r.valuation), 200e9, 2e12, 3e12]
+    .filter(v => v > G.valuation).length + 1;
+
+  html = `
+    <div class="section-title">📊 Market Overview</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      ${statBox('Market Rank', '#'+yourRank+' AI Company', 'var(--gold)')}
+      ${statBox('Tech Level', G.techLevel + ' / 100', 'var(--cyan)')}
+      ${statBox('Reputation', G.reputation + ' pts', 'var(--purple)')}
+      ${statBox('Month', `${G.year}-${String(G.month).padStart(2,'0')}`, 'var(--dim)')}
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">YOUR VALUATION TREND</div>
+      <canvas class="minichart" id="marketChart" width="400" height="60"></canvas>
+    </div>
+
+    <div class="section-title">🌍 Global AI Market Share</div>
+    ${marketBar('NexMind', G.valuation, 5e12, 'var(--green)')}
+    ${G.rivals.filter(r=>r.active).map(r=>marketBar(r.name, r.valuation, 5e12, r.color)).join('')}
+    ${marketBar('OpenAI/MSFT', 3200000000000, 5e12, '#666')}
+    ${marketBar('Google DeepMind', 2000000000000, 5e12, '#4285f4')}
+
+    <div class="section-title">📈 Key Metrics</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px">
+      <div class="pbar-wrap">
+        <div class="pbar-label"><span>Tech Leadership</span><span>${Math.min(100,G.techLevel)}%</span></div>
+        <div class="pbar"><div class="pbar-fill blue" style="width:${Math.min(100,G.techLevel)}%"></div></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-label"><span>Brand Reputation</span><span>${Math.min(100,Math.floor(G.reputation/2))}%</span></div>
+        <div class="pbar"><div class="pbar-fill purple" style="width:${Math.min(100,Math.floor(G.reputation/2))}%"></div></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-label"><span>Team Strength</span><span>${Math.min(100,G.team.length*5)}%</span></div>
+        <div class="pbar"><div class="pbar-fill green" style="width:${Math.min(100,G.team.length*5)}%"></div></div>
+      </div>
+    </div>
+  `;
+  // ── MORALE SECTION ──
+  const moraleColor = G.morale > 70 ? 'var(--green)' : G.morale > 40 ? 'var(--orange)' : 'var(--red)';
+  const moraleEmoji = G.morale > 70 ? '😊' : G.morale > 40 ? '😐' : '😟';
+  html += `
+    <div class="section-title">😊 Team Morale</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:24px">${moraleEmoji}</span>
+        <span style="font-family:var(--font-mono);font-size:20px;color:${moraleColor}">${G.morale}/100</span>
+      </div>
+      <div class="pbar"><div class="pbar-fill ${G.morale>70?'green':G.morale>40?'gold':'red'}" style="width:${G.morale}%"></div></div>
+      <div style="font-size:11px;color:var(--dim);margin-top:8px">
+        ${G.morale > 70 ? '🔥 Team is fired up. High morale = better productivity.' :
+          G.morale > 40 ? '⚠️ Morale is shaky. Make some positive decisions.' :
+          '🚨 DANGER: Engineers are looking for other jobs. Risk of mass resignation.'}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn-primary" style="font-size:11px;padding:8px" onclick="boostMorale('pizza')">🍕 Pizza Friday (+5, -$2K)</button>
+        <button class="btn-primary btn-gold" style="font-size:11px;padding:8px" onclick="boostMorale('raise')">💰 Across-the-board raise (+20, -$500K)</button>
+      </div>
+    </div>`;
+
+  // ── BOARD SECTION ──
+  const boardColor = G.boardTrust > 60 ? 'var(--green)' : G.boardTrust > 35 ? 'var(--orange)' : 'var(--red)';
+  html += `
+    <div class="section-title">🏛️ Board of Directors</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <span style="font-size:13px;color:var(--text)">Board Trust Level</span>
+        <span style="font-family:var(--font-mono);color:${boardColor}">${G.boardTrust}/100</span>
+      </div>
+      <div class="pbar" style="margin-bottom:10px"><div class="pbar-fill ${G.boardTrust>60?'green':G.boardTrust>35?'gold':'red'}" style="width:${G.boardTrust}%"></div></div>
+      ${BOARD_MEMBERS.map(b => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+          <span style="font-size:18px">${b.emoji}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;color:var(--bright)">${b.name}</div>
+            <div style="font-size:10px;color:var(--dim)">${b.role} · Cares about: ${b.pref}</div>
+          </div>
+          <div style="font-family:var(--font-mono);font-size:11px;color:${b.trust>60?'var(--green)':'var(--orange)'}">
+            ${b.trust > 70 ? '✅' : b.trust > 40 ? '⚠️' : '🔴'} ${b.trust}%
+          </div>
+        </div>`).join('')}
+      <div style="font-size:11px;color:var(--dim);margin-top:8px">
+        ${G.boardTrust < 30 ? '🚨 WARNING: Board may vote to remove you as CEO!' :
+          G.boardTrust < 50 ? '⚠️ Board is nervous. Make strong decisions.' : '✅ Board supports your leadership.'}
+      </div>
+    </div>`;
+
+  // ── STOCK SECTION ──
+  if (G.chapter >= 4) {
+    html += `
+      <div class="section-title">📈 Stock Price (NXMD)</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:12px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div>
+            <div style="font-family:var(--font-head);font-size:22px;color:var(--green)">$${G.stockPrice.toFixed(2)}</div>
+            <div style="font-size:10px;color:var(--dim)">NASDAQ: NXMD</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--dim)">Investor Happiness</div>
+            <div style="font-family:var(--font-mono);color:${G.investorHappiness>60?'var(--green)':'var(--orange)'}">
+              ${G.investorHappiness}%
+            </div>
+          </div>
+        </div>
+        <canvas id="stockChart" width="400" height="50" style="width:100%;height:50px;display:block"></canvas>
+      </div>`;
+  }
+
+  // ── INTERNATIONAL ──
+  html += `
+    <div class="section-title">🌍 International Offices</div>
+    ${G.intlOffices.length ? G.intlOffices.map(id => {
+      const o = INTL_OFFICES.find(x=>x.id===id);
+      return o ? `<div style="background:var(--card);border:1px solid rgba(0,255,136,.2);border-radius:4px;padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:center">
+        <span style="font-size:24px">${o.emoji}</span>
+        <div><div style="font-size:13px;color:var(--bright)">${o.city} Office</div>
+        <div style="font-size:10px;color:var(--green)">+${getValDisplay(o.bonus.monthlyRevenue)}/mo · +${o.bonus.rep} rep</div></div>
+      </div>` : '';
+    }).join('') : '<div style="font-size:12px;color:var(--dim);margin-bottom:8px">No international offices yet.</div>'}
+    ${G.chapter >= 3 ? INTL_OFFICES.filter(o=>!G.intlOffices.includes(o.id)).slice(0,3).map(o=>`
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:4px;padding:10px 12px;margin-bottom:6px;display:flex;gap:10px;align-items:center">
+        <span style="font-size:24px">${o.emoji}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;color:var(--bright)">${o.city}</div>
+          <div style="font-size:10px;color:var(--dim)">${o.challenge}</div>
+          <div style="font-size:10px;color:var(--gold)">Cost: ${getValDisplay(o.cost)} · +${getValDisplay(o.bonus.monthlyRevenue)}/mo</div>
+        </div>
+        <button class="hire-btn" onclick="openIntlOffice('${o.id}')">Open</button>
+      </div>`).join('') : '<div style="font-size:11px;color:var(--dim)">Unlock at Chapter 3</div>'}`;
+
+  // ── ACHIEVEMENTS ──
+  html += `
+    <div class="section-title">🏆 Achievements (${G.achievements.length}/${ACHIEVEMENTS.length})</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px">
+      ${ACHIEVEMENTS.map(a => {
+        const earned = G.achievements.includes(a.id);
+        return `<div style="background:var(--card);border:1px solid ${earned?'rgba(0,255,136,.3)':'var(--border)'};border-radius:4px;padding:8px;opacity:${earned?1:.4}">
+          <div style="font-size:20px">${a.emoji}</div>
+          <div style="font-size:11px;color:${earned?'var(--bright)':'var(--dim)'};font-weight:600;margin-top:3px">${a.name}</div>
+          <div style="font-size:9px;color:var(--dim);margin-top:2px">${a.desc}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+
+  cont.innerHTML = html;
+  // Draw market chart
+  setTimeout(() => {
+    const mc = document.getElementById('marketChart');
+    if (!mc) return;
+    const ctx3 = mc.getContext('2d');
+    const W3 = mc.offsetWidth * devicePixelRatio || 400;
+    mc.width = W3; mc.height = 60;
+    const data = [...G.chartData, G.valuation];
+    if (data.length < 2) return;
+    const min2 = Math.min(...data) * 0.9;
+    const max2 = Math.max(...data) * 1.1;
+    const range2 = max2 - min2 || 1;
+    const pts2 = data.map((v,i) => ({ x:(i/(data.length-1))*W3, y:60-((v-min2)/range2)*50-4 }));
+    const grad2 = ctx3.createLinearGradient(0,0,0,60);
+    grad2.addColorStop(0,'rgba(0,212,255,.2)'); grad2.addColorStop(1,'rgba(0,212,255,0)');
+    ctx3.fillStyle=grad2;
+    ctx3.beginPath(); ctx3.moveTo(pts2[0].x,60);
+    pts2.forEach(p=>ctx3.lineTo(p.x,p.y));
+    ctx3.lineTo(pts2[pts2.length-1].x,60); ctx3.closePath(); ctx3.fill();
+    ctx3.strokeStyle='#00d4ff'; ctx3.lineWidth=2;
+    ctx3.beginPath(); pts2.forEach((p,i)=>i===0?ctx3.moveTo(p.x,p.y):ctx3.lineTo(p.x,p.y)); ctx3.stroke();
+    // Stock chart
+    const sc = document.getElementById('stockChart');
+    if (sc && G.stockHistory.length > 1) {
+      const sc2 = sc.getContext('2d');
+      const SW = sc.offsetWidth * devicePixelRatio || 400;
+      sc.width = SW; sc.height = 50;
+      const sMin = Math.min(...G.stockHistory) * 0.95;
+      const sMax = Math.max(...G.stockHistory) * 1.05;
+      const sRange = sMax - sMin || 1;
+      const sPts = G.stockHistory.map((v,i) => ({
+        x: (i/(G.stockHistory.length-1))*SW,
+        y: 50 - ((v-sMin)/sRange)*44 - 3
+      }));
+      const rising = G.stockHistory[G.stockHistory.length-1] >= G.stockHistory[0];
+      const sGrad = sc2.createLinearGradient(0,0,0,50);
+      sGrad.addColorStop(0, rising ? 'rgba(0,255,136,.25)' : 'rgba(255,51,102,.25)');
+      sGrad.addColorStop(1, 'rgba(0,0,0,0)');
+      sc2.fillStyle = sGrad;
+      sc2.beginPath(); sc2.moveTo(sPts[0].x, 50);
+      sPts.forEach(p => sc2.lineTo(p.x, p.y));
+      sc2.lineTo(sPts[sPts.length-1].x, 50); sc2.closePath(); sc2.fill();
+      sc2.strokeStyle = rising ? '#00ff88' : '#ff3366'; sc2.lineWidth = 1.5;
+      sc2.beginPath(); sPts.forEach((p,i)=>i===0?sc2.moveTo(p.x,p.y):sc2.lineTo(p.x,p.y)); sc2.stroke();
+    }
+  }, 100);
+}
+
+function marketBar(name, val, total, color) {
+  const pct = Math.min(100, Math.floor(val/total*100));
+  return `
+    <div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:11px;color:var(--text)">${name}</span>
+        <span style="font-family:var(--font-mono);font-size:10px;color:var(--dim)">${getValDisplay(val)}</span>
+      </div>
+      <div class="pbar"><div class="pbar-fill" style="width:${pct}%;background:${color}"></div></div>
+    </div>`;
+}
+
+function getRankString() {
+  const vals = [
+    ...G.rivals.filter(r=>r.active).map(r=>r.valuation),
+    200e9, 2e12, 3e12
+  ];
+  const rank = vals.filter(v=>v>G.valuation).length + 1;
+  if (rank === 1) return '👑 #1 AI Company in the World!';
+  return `#${rank} AI Company`;
+}
+
+// ── UI ACTIONS ──────────────────────────────────────────────
+function upgradeOffice() {
+  const next = OFFICES[G.officeLevel + 1];
+  if (!next) return;
+  if (G.money < next.cost) { showToast('Not enough cash!', 'bad'); return; }
+  G.money -= next.cost;
+  G.officeLevel++;
+  if (next.effect) {
+    if (next.effect.maxTeam) G.maxTeam = next.effect.maxTeam;
+    if (next.effect.rep) G.reputation += next.effect.rep;
+  }
+  showToast(`🏢 Upgraded to ${next.name}!`, 'good');
+  updateAllUI();
+}
+
+function hireEngineer(name) {
+  const eng = HIRE_POOL.find(h => h.name === name);
+  if (!eng) return;
+  if (G.team.length >= G.maxTeam) { showToast('Office too small! Upgrade office first.', 'bad'); return; }
+  if (G.money < eng.salary * 0.25) { showToast('Not enough cash for first quarter salary!', 'bad'); return; }
+  G.team.push({...eng});
+  showToast(`✅ ${eng.name} joined as ${eng.role}!`, 'good');
+  G.techLevel += 2;
+  updateAllUI();
+}
+
+function toggleProduct(id) {
+  const p = G.products.find(x=>x.id===id);
+  if (!p || p.unlockChapter > G.chapter) return;
+  p.active = !p.active;
+  showToast(`${p.active?'🚀 Launched':'⏸️ Paused'}: ${p.name}`, p.active?'good':'info');
+  updateAllUI();
+}
+
+function startResearch(id) {
+  if (G.researchQueue) { showToast('Already researching something!', 'bad'); return; }
+  const item = RESEARCH_ITEMS.find(r=>r.id===id);
+  if (!item) return;
+  if (G.money < item.cost.money) { showToast('Not enough cash!', 'bad'); return; }
+  if (!item.requires.every(r=>G.researched.includes(r))) { showToast('Prerequisites not met!', 'bad'); return; }
+  G.money -= item.cost.money;
+  G.researchQueue = id;
+  G.researchProgress = 0;
+  showToast(`🔬 Research started: ${item.name}`, 'info');
+  renderResearch();
+  updateAllUI();
+}
+
+function boostMorale(type) {
+  if (type === 'pizza') {
+    if (G.money < 2000) { showToast('Not enough cash!','bad'); return; }
+    G.money -= 2000;
+    updateMorale(5, 'Pizza Friday!');
+    updateBoardTrust(1);
+  } else if (type === 'raise') {
+    if (G.money < 500000) { showToast('Not enough cash for raises!','bad'); return; }
+    G.money -= 500000;
+    updateMorale(20, 'Across-the-board raise!');
+    updateBoardTrust(3);
+    showToast('💰 Salaries raised! Team is pumped!', 'good');
+  }
+  updateAllUI();
+}
+
+function openIntlOffice(id) {
+  const office = INTL_OFFICES.find(o => o.id === id);
+  if (!office) return;
+  if (G.money < office.cost) { showToast('Not enough cash!', 'bad'); return; }
+  G.money -= office.cost;
+  G.intlOffices.push(id);
+  G.monthlyRevenue += office.bonus.monthlyRevenue;
+  G.reputation += office.bonus.rep;
+  updateBoardTrust(5);
+  showToast(`🌍 ${office.city} office opened! +${getValDisplay(office.bonus.monthlyRevenue)}/mo`, 'good');
+  updateAllUI();
+}
+
+// ═══════════════════════════════════════════════════════════
+// FOUNDER SKILL SYSTEM
+// ═══════════════════════════════════════════════════════════
+function computeSkillEffects() {
+  const fx = {};
+  G.unlockedSkills.forEach(id => {
+    const sk = FOUNDER_SKILLS.find(s => s.id === id);
+    if (!sk) return;
+    Object.assign(fx, sk.effect);
+  });
+  G.skillEffects = fx;
+  // Apply passive rep
+  if (fx.passiveRep && G.week === 1) G.reputation += fx.passiveRep;
+  // Enforce min rep
+  if (fx.minRep && G.reputation < fx.minRep) G.reputation = fx.minRep;
+  // Free counters per month
+  if (fx.freeCounters && G.week === 1) G.freeCounters = fx.freeCounters;
+}
+
+function unlockSkill(id) {
+  const sk = FOUNDER_SKILLS.find(s => s.id === id);
+  if (!sk) return;
+  if (G.unlockedSkills.includes(id)) { showToast('Already unlocked!', 'info'); return; }
+  if (G.skillPoints < sk.cost) { showToast('Not enough skill points!', 'bad'); return; }
+  const prereqsMet = sk.requires.every(r => G.unlockedSkills.includes(r));
+  if (!prereqsMet) { showToast('Prerequisites not met!', 'bad'); return; }
+  G.skillPoints -= sk.cost;
+  G.unlockedSkills.push(id);
+  computeSkillEffects();
+  showToast('🌟 Skill unlocked: ' + sk.name + '!', 'good');
+  renderSkillTree();
+  updateAllUI();
+}
+
+function renderSkillTree() {
+  const cont = document.getElementById('skillTreeContent');
+  if (!cont) return;
+  const tierColors = ['','var(--green)','var(--cyan)','var(--gold)','var(--red)'];
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div class="section-title" style="margin:0">⚡ Founder Skills</div>';
+  html += '<div style="font-family:var(--font-mono);font-size:12px;color:var(--gold)">SP: ' + G.skillPoints + '</div></div>';
+  html += '<div style="font-size:11px;color:var(--dim);margin-bottom:12px">Earn skill points by reaching valuations and completing achievements. Spend them to become a better CEO.</div>';
+
+  [1,2,3,4].forEach(tier => {
+    const skills = FOUNDER_SKILLS.filter(s => s.tier === tier);
+    html += '<div style="margin-bottom:4px;font-family:var(--font-mono);font-size:9px;color:' + (tierColors[tier]||'var(--dim)') + ';letter-spacing:2px">TIER ' + tier + '</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(' + Math.min(skills.length,3) + ',1fr);gap:6px;margin-bottom:12px">';
+    skills.forEach(sk => {
+      const unlocked = G.unlockedSkills.includes(sk.id);
+      const prereqsMet = sk.requires.every(r => G.unlockedSkills.includes(r));
+      const canAfford = G.skillPoints >= sk.cost;
+      const available = prereqsMet && !unlocked;
+      html += '<div style="background:var(--card);border:1px solid ' +
+        (unlocked ? 'rgba(0,255,136,.4)' : available ? 'rgba(0,148,255,.3)' : 'var(--border)') +
+        ';border-radius:4px;padding:10px;opacity:' + (prereqsMet||unlocked ? '1' : '.4') + ';cursor:' + (available?'pointer':'default') + '"' +
+        (available ? ' onclick="unlockSkill(\''+sk.id+'\')"' : '') + '>';
+      html += '<div style="font-size:20px;margin-bottom:4px">' + sk.emoji + '</div>';
+      html += '<div style="font-size:11px;font-weight:600;color:' + (unlocked?'var(--green)':'var(--bright)') + '">' + sk.name + '</div>';
+      html += '<div style="font-size:9px;color:var(--dim);margin-top:3px;line-height:1.4">' + sk.desc + '</div>';
+      html += '<div style="margin-top:6px;font-family:var(--font-mono);font-size:10px;color:' + (unlocked?'var(--green)':canAfford&&available?'var(--gold)':'var(--dim)') + '">';
+      html += unlocked ? '✅ UNLOCKED' : (available ? 'Cost: ' + sk.cost + ' SP' : (prereqsMet?'Cost: '+sk.cost+' SP':'🔒 LOCKED'));
+      html += '</div></div>';
+    });
+    html += '</div>';
+  });
+  cont.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// EMAIL INBOX SYSTEM
+// ═══════════════════════════════════════════════════════════
+function checkEmailQueue() {
+  EMAIL_TEMPLATES.forEach(em => {
+    if (!G.inbox.find(i => i.id === em.id) && em.chapter <= G.chapter) {
+      // Add with slight delay per email
+      G.inbox.unshift({ ...em, read: false, timestamp: G.year + '-' + String(G.month).padStart(2,'0') });
+      G.unreadEmails++;
+      // Update tab badge
+      updateEmailBadge();
+    }
+  });
+}
+
+function updateEmailBadge() {
+  const badge = document.getElementById('emailBadge');
+  if (badge) {
+    badge.textContent = G.unreadEmails > 0 ? G.unreadEmails : '';
+    badge.style.display = G.unreadEmails > 0 ? 'inline' : 'none';
+  }
+}
+
+function renderInbox() {
+  const cont = document.getElementById('inboxContent');
+  if (!cont) return;
+  const unread = G.inbox.filter(e => !e.read).length;
+  let html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">';
+  html += '<div class="section-title" style="margin:0">📧 Inbox</div>';
+  if (unread > 0) html += '<div style="font-family:var(--font-mono);font-size:11px;color:var(--red)">' + unread + ' unread</div>';
+  html += '</div>';
+
+  if (!G.inbox.length) {
+    html += '<div class="empty-state">No emails yet. Check back as you grow.</div>';
+  } else {
+    G.inbox.forEach((em, idx) => {
+      html += '<div style="background:var(--card);border:1px solid ' + (em.read?'var(--border)':'rgba(0,148,255,.3)') + ';border-radius:4px;margin-bottom:8px;overflow:hidden;cursor:pointer" onclick="openEmail(' + idx + ')">';
+      html += '<div style="padding:10px 12px;display:flex;gap:10px;align-items:flex-start">';
+      html += '<div style="width:8px;height:8px;border-radius:50%;background:' + (em.read?'transparent':'var(--blue)') + ';flex-shrink:0;margin-top:4px"></div>';
+      html += '<div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600;color:' + (em.read?'var(--text)':'var(--bright)') + ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + em.subject + '</div>';
+      html += '<div style="font-size:10px;color:var(--dim);margin-top:2px">' + em.fromName + ' · ' + em.timestamp + '</div></div>';
+      html += '<div style="font-size:16px">' + (em.read ? '' : '●') + '</div>';
+      html += '</div></div>';
+    });
+  }
+  cont.innerHTML = html;
+}
+
+function closeEventOverlay() {
+  document.getElementById('eventOverlay').classList.remove('show');
+}
+
+function openEmail(idx) {
+  const em = G.inbox[idx];
+  if (!em) return;
+  em.read = true;
+  G.unreadEmails = Math.max(0, G.unreadEmails - 1);
+  updateEmailBadge();
+
+  // Show in event overlay style
+  const box = document.getElementById('eventBox');
+  box.className = 'event-box opportunity';
+  document.getElementById('evEmoji').textContent = '📧';
+  document.getElementById('evTitle').textContent = em.subject;
+  const tag = document.getElementById('evTag');
+  tag.textContent = 'FROM: ' + em.fromName;
+  tag.className = 'event-type-tag tag-neutral';
+  document.getElementById('evDesc').innerHTML = '<div style="font-size:11px;color:var(--dim);margin-bottom:8px">From: ' + em.from + ' · ' + em.timestamp + '</div>' + em.body;
+
+  const choices = document.getElementById('evChoices');
+  if (em.choices && !em.replied) {
+    choices.innerHTML = em.choices.map((c,i) =>
+      '<button class="event-choice" onclick="replyEmail(' + idx + ',' + i + ')">' +
+      '<span class="choice-text">' + c.label + '</span>' +
+      '</button>'
+    ).join('');
+  } else {
+    choices.innerHTML = '<button class="event-choice" onclick="closeEventOverlay()"><span class="choice-text">✓ Close</span></button>';
+  }
+  document.getElementById('eventOverlay').classList.add('show');
+  renderInbox();
+}
+
+function replyEmail(emailIdx, choiceIdx) {
+  const em = G.inbox[emailIdx];
+  if (!em || em.replied) return;
+  em.replied = true;
+  const choice = em.choices[choiceIdx];
+  applyEffects(choice.effect || {});
+  checkAchievements();
+  document.getElementById('eventOverlay').classList.remove('show');
+  showToast('📧 Reply sent: "' + choice.reply + '"', 'good');
+  updateAllUI();
+}
+
+// ═══════════════════════════════════════════════════════════
+// TWITTER FEED SYSTEM
+// ═══════════════════════════════════════════════════════════
+function updateTwitterFeed() {
+  // Add unseen tweets based on chapter / rep
+  const available = TWITTER_EVENTS.filter(t => !G.seenTweets.includes(t.id));
+  if (available.length > 0 && Math.random() < 0.5) {
+    const tweet = available[Math.floor(Math.random() * available.length)];
+    G.seenTweets.push(tweet.id);
+    G.twitterFeed.unshift({ ...tweet, time: G.year + '-' + String(G.month).padStart(2,'0') });
+    if (G.twitterFeed.length > 20) G.twitterFeed.pop();
+    if (tweet.repBonus) {
+      G.reputation = Math.max(0, G.reputation + tweet.repBonus);
+      if (Math.abs(tweet.repBonus) >= 10) {
+        showToast((tweet.repBonus > 0 ? '🐦 +' : '🐦 ') + tweet.repBonus + ' rep from Twitter', tweet.repBonus > 0 ? 'good' : 'bad');
+      }
+    }
+  }
+}
+
+function renderTwitterFeed() {
+  const cont = document.getElementById('twitterContent');
+  if (!cont) return;
+  let html = '<div class="section-title">🐦 Tech Twitter</div>';
+  if (!G.twitterFeed.length) {
+    html += '<div class="empty-state">No tweets yet. Make some noise.</div>';
+  } else {
+    G.twitterFeed.forEach(tw => {
+      const col = tw.type === 'positive' ? 'var(--green)' : tw.type === 'negative' ? 'var(--red)' : 'var(--cyan)';
+      html += '<div style="background:var(--card);border:1px solid var(--border);border-left:3px solid ' + col + ';border-radius:4px;padding:10px 12px;margin-bottom:8px">';
+      html += '<div style="display:flex;justify-content:space-between;margin-bottom:6px">';
+      html += '<span style="font-family:var(--font-mono);font-size:11px;color:' + col + '">' + tw.author + '</span>';
+      if (tw.followers) html += '<span style="font-size:9px;color:var(--dim)">' + tw.followers + ' followers</span>';
+      html += '</div>';
+      html += '<div style="font-size:12px;color:var(--text);line-height:1.5">' + tw.text + '</div>';
+      html += '<div style="font-size:9px;color:var(--dim);margin-top:6px">' + tw.time + ' · ' + (tw.repBonus > 0 ? '+' : '') + tw.repBonus + ' rep</div>';
+      html += '</div>';
+    });
+  }
+  cont.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════════
+// TECH DEBT SYSTEM
+// ═══════════════════════════════════════════════════════════
+function tickTechDebt() {
+  // Debt builds when shipping fast (high decision velocity) or many active products
+  const activeProds = G.products.filter(p => p.active).length;
+  const debtGrowth = activeProds * 0.5 + (G.totalDecisions > 20 ? 1 : 0);
+  const debtDecay = G.researched.length * 0.3; // Good engineering slows debt
+  G.techDebt = Math.min(100, Math.max(0, G.techDebt + debtGrowth - debtDecay));
+
+  // Trigger debt events
+  const triggered = TECH_DEBT_EVENTS.find(e => G.techDebt >= e.threshold && !G.events.includes('debt_' + e.threshold));
+  if (triggered) {
+    G.events.push('debt_' + triggered.threshold);
+    applyEffects(triggered.damage);
+    showToast('⚠️ Tech Debt: ' + triggered.msg, 'bad');
+    // Auto show event overlay for serious ones
+    if (triggered.threshold >= 70) {
+      showEvent({
+        id: 'debt_crisis_' + triggered.threshold,
+        type: 'crisis', emoji: '🔧',
+        title: 'Tech Debt Crisis',
+        tag: 'ENGINEERING', tagClass: 'tag-crisis',
+        desc: triggered.msg + ' Your engineering team is overwhelmed.',
+        choices: [
+          { text: '🔧 Dedicate full sprint to debt reduction', hint: '-2 weeks features, -$50K', effect: { money: -50000, techDebt_reduce: 30 } },
+          { text: '💰 Hire 3 more engineers to handle it', hint: '-$300K/yr', effect: { money: -300000, techDebt_reduce: 20 } },
+          { text: '🚀 Ship through it, deal with consequences later', hint: '+velocity, more debt', effect: { techDebt_add: 15 } },
+        ]
+      });
+    }
+  }
+}
+
+function updateTicker() {
+  const items = [...G.tickerItems, ...TICKER_BASE];
+  const unique = [...new Set(items)];
+  document.getElementById('ticker').textContent = unique.join('  ·  ');
+}
+
+function updateAllUI() {
+  // Stats bar
+  document.getElementById('statMoney').textContent = getMoneyDisplay(G.money);
+  document.getElementById('statTeam').textContent = G.team.length;
+  document.getElementById('statRep').textContent = G.reputation;
+  document.getElementById('statTech').textContent = G.techLevel;
+  document.getElementById('statVal').textContent = getValDisplay(Math.floor(G.valuation));
+  document.getElementById('topCompanyName').textContent = G.companyName;
+
+  // Refresh active panel
+  const active = document.querySelector('.panel.active');
+  if (!active) return;
+  if (active.id === 'panelCompany') renderCompany();
+  if (active.id === 'panelRivals') renderRivals();
+  if (active.id === 'panelResearch') renderResearch();
+  if (active.id === 'panelMarket') renderMarket();
+  if (active.id === 'panelHub') { renderSkillTree(); renderTwitterFeed(); renderInbox(); }
+}
+
+function switchTab(name, panelId, btn) {
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(panelId).classList.add('active');
+  btn.classList.add('active');
+  document.getElementById('gameBody').scrollTop = 0;
+  // Render panel
+  if (panelId==='panelCompany') renderCompany();
+  if (panelId==='panelRivals') renderRivals();
+  if (panelId==='panelResearch') renderResearch();
+  if (panelId==='panelMarket') renderMarket();
+  if (panelId==='panelHub') { renderSkillTree(); renderTwitterFeed(); renderInbox(); }
+}
+
+function toggleMenu() {
+  showToast('Game menu: ESC or refresh to restart', 'info');
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('off'));
+  document.getElementById(id).classList.remove('off');
+}
+
+function showWin() {
+  clearInterval(gameTimerInterval);
+  const finalRank = getRankString();
+  document.getElementById('winSub').innerHTML = `You started in a bedroom with $800 and built the most valuable AI company on Earth. The world will never be the same.<br><br><span style="color:var(--gold)">${finalRank}</span>`;
+  document.getElementById('winStats').innerHTML = `
+    <div class="win-stat"><div class="win-stat-n">${getValDisplay(G.valuation)}</div><div class="win-stat-l">Final Valuation</div></div>
+    <div class="win-stat"><div class="win-stat-n">${G.team.length}</div><div class="win-stat-l">Team Size</div></div>
+    <div class="win-stat"><div class="win-stat-n">${G.totalDecisions}</div><div class="win-stat-l">Decisions Made</div></div>
+    <div class="win-stat"><div class="win-stat-n">${G.crisisWeathered}</div><div class="win-stat-l">Crises Survived</div></div>
+  `;
+  showScreen('win');
+}
+
+function restartGame() {
+  clearInterval(gameTimerInterval);
+  location.reload();
+}
+
+// Show toast
+function showToast(msg, type='info') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// Save/Load
+function saveGame() {
+  try { localStorage.setItem('se_save', JSON.stringify(G)); showToast('💾 Game saved!', 'good'); } catch(e) {}
+}
+function loadGame() {
+  try {
+    const s = localStorage.getItem('se_save');
+    if (s) { Object.assign(G, JSON.parse(s)); return true; }
+  } catch(e) {}
+  return false;
+}
+
+// Auto-save every 30s
+setInterval(saveGame, 30000);
+</script>
+</body>
+</html>
